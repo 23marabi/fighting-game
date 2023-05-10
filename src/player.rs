@@ -1,3 +1,4 @@
+use crate::AppState;
 use bevy::prelude::*;
 
 pub struct PlayerPlugin;
@@ -8,9 +9,13 @@ struct GreetTimer(Timer);
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
-            .add_startup_system(add_players)
-            .add_system(greet_players)
-            .add_system(check_player_state);
+            .add_system(greet_players.in_schedule(OnEnter(AppState::InGame)))
+            .add_system(check_player_state.in_set(OnUpdate(AppState::InGame)))
+            .add_system(
+                add_players
+                    .in_schedule(OnEnter(AppState::InGame))
+                    .before(greet_players),
+            );
     }
 }
 
