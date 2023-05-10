@@ -18,7 +18,11 @@ pub enum AppState {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(AssetPlugin {
+            // Tell the asset server to watch for asset changes on disk:
+            watch_for_changes: true,
+            ..default()
+        }))
         .add_state::<AppState>()
         .add_plugin(PlayerPlugin)
         .add_system(setup.on_startup())

@@ -11,6 +11,7 @@ impl Plugin for PlayerPlugin {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_system(greet_players.in_schedule(OnEnter(AppState::InGame)))
             .add_system(check_player_state.in_set(OnUpdate(AppState::InGame)))
+            .add_system(keyboard_input.in_set(OnUpdate(AppState::InGame)))
             .add_system(
                 add_players
                     .in_schedule(OnEnter(AppState::InGame))
@@ -54,6 +55,8 @@ enum AttackState {
 
 #[derive(Component, Debug)]
 enum Direction {
+    Up,
+    Down,
     Left,
     Right,
 }
@@ -121,6 +124,51 @@ fn check_player_state(query: Query<(&Name, &Health, &PlayerState), With<Player>>
             PlayerState::Attacking(_) => println!("{} ({}HP) is Attacking", name.0, health.0),
             PlayerState::Blocking(_) => println!("{} ({}HP) is Blocking", name.0, health.0),
             _ => {}
+        }
+    }
+}
+
+fn keyboard_input(
+    keys: Res<Input<KeyCode>>,
+    mut query: Query<(&PlayerNumber, &mut PlayerState), With<Player>>,
+) {
+    for (num, mut state) in query.iter_mut() {
+        match num {
+            PlayerNumber(1) => {
+                if keys.pressed(KeyCode::W) {
+                    *state = PlayerState::Moving(Direction::Up);
+                } else if keys.pressed(KeyCode::A) {
+                    *state = PlayerState::Moving(Direction::Left);
+                } else if keys.pressed(KeyCode::D) {
+                    *state = PlayerState::Moving(Direction::Right);
+                } else if keys.pressed(KeyCode::S) {
+                    *state = PlayerState::Moving(Direction::Down);
+                }
+
+                if keys.any_just_released([KeyCode::W, KeyCode::A, KeyCode::S, KeyCode::D]) {
+                    *state = PlayerState::Idle;
+                }
+            }
+            _ => {
+                if keys.pressed(KeyCode::Up) {
+                    *state = PlayerState::Moving(Direction::Up);
+                } else if keys.pressed(KeyCode::Left) {
+                    *state = PlayerState::Moving(Direction::Left);
+                } else if keys.pressed(KeyCode::Right) {
+                    *state = PlayerState::Moving(Direction::Right);
+                } else if keys.pressed(KeyCode::Down) {
+                    *state = PlayerState::Moving(Direction::Down);
+                }
+
+                if keys.any_just_released([
+                    KeyCode::Up,
+                    KeyCode::Left,
+                    KeyCode::Right,
+                    KeyCode::Down,
+                ]) {
+                    *state = PlayerState::Idle;
+                }
+            }
         }
     }
 }
