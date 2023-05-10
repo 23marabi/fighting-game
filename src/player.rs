@@ -1,5 +1,10 @@
 use crate::AppState;
-use bevy::prelude::*;
+use bevy::{
+    input::gamepad::{
+        GamepadAxisChangedEvent, GamepadButtonChangedEvent, GamepadConnectionEvent, GamepadEvent,
+    },
+    prelude::*,
+};
 
 pub struct PlayerPlugin;
 
@@ -10,6 +15,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(GreetTimer(Timer::from_seconds(2.0, TimerMode::Repeating)))
             .add_system(greet_players.in_schedule(OnEnter(AppState::InGame)))
+            .add_system(gamepad_ordered_events)
             .add_system(check_player_state.in_set(OnUpdate(AppState::InGame)))
             .add_system(keyboard_input.in_set(OnUpdate(AppState::InGame)))
             .add_system(
@@ -53,13 +59,15 @@ enum AttackState {
     Recovery,
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq, Copy, Clone)]
 enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
+    Negative = -1,
+    Center = 0,
+    Positive = 1,
 }
+
+#[derive(Component, Debug, PartialEq, Copy, Clone)]
+struct Movement(Direction, Direction);
 
 #[derive(Component)]
 enum BlockState {
@@ -71,7 +79,7 @@ enum BlockState {
 #[derive(Component)]
 enum PlayerState {
     Idle,
-    Moving(Direction),
+    Moving(Movement),
     Attacking(AttackState),
     Blocking(BlockState),
 }
@@ -97,7 +105,7 @@ fn add_players(mut commands: Commands) {
             hp: Health(10.0),
             num: PlayerNumber(2),
             _p: Player,
-            state: PlayerState::Moving(Direction::Left),
+            state: PlayerState::Idle,
             _d: Dead(false),
             _j: Jumping(false),
         }),
@@ -135,40 +143,81 @@ fn keyboard_input(
     for (num, mut state) in query.iter_mut() {
         match num {
             PlayerNumber(1) => {
+                let mut in_move = Movement(Direction::Center, Direction::Center);
+                let no_move = Movement(Direction::Center, Direction::Center);
                 if keys.pressed(KeyCode::W) {
-                    *state = PlayerState::Moving(Direction::Up);
-                } else if keys.pressed(KeyCode::A) {
-                    *state = PlayerState::Moving(Direction::Left);
-                } else if keys.pressed(KeyCode::D) {
-                    *state = PlayerState::Moving(Direction::Right);
-                } else if keys.pressed(KeyCode::S) {
-                    *state = PlayerState::Moving(Direction::Down);
-                }
+                    in_move.1 = Direction::Positive
+                };
+                if keys.pressed(KeyCode::S) {
+                    in_move.1 = Direction::Negative
+                };
+                if keys.pressed(KeyCode::A) {
+                    in_move.0 = Direction::Negative
+                };
+                if keys.pressed(KeyCode::D) {
+                    in_move.0 = Direction::Positive
+                };
 
-                if keys.any_just_released([KeyCode::W, KeyCode::A, KeyCode::S, KeyCode::D]) {
-                    *state = PlayerState::Idle;
+                match *state {
+                    PlayerState::Moving(no_move) => {
+                        *state = PlayerState::Idle;
+                    }
+                    PlayerState::Moving(_) => {
+                        println!("moving x: {:?}, y: {:?}", &in_move.0, &in_move.1);
+                        if in_move != no_move {
+                            *state = PlayerState::Moving(in_move);
+                        }
+                    }
+                    _ => {
+                        if in_move != no_move {
+                            *state = PlayerState::Moving(in_move);
+                        }
+                    }
                 }
             }
             _ => {
+                let mut in_move = Movement(Direction::Center, Direction::Center);
+                let no_move = Movement(Direction::Center, Direction::Center);
                 if keys.pressed(KeyCode::Up) {
-                    *state = PlayerState::Moving(Direction::Up);
-                } else if keys.pressed(KeyCode::Left) {
-                    *state = PlayerState::Moving(Direction::Left);
-                } else if keys.pressed(KeyCode::Right) {
-                    *state = PlayerState::Moving(Direction::Right);
-                } else if keys.pressed(KeyCode::Down) {
-                    *state = PlayerState::Moving(Direction::Down);
-                }
+                    in_move.1 = Direction::Positive
+                };
+                if keys.pressed(KeyCode::Down) {
+                    in_move.1 = Direction::Negative
+                };
+                if keys.pressed(KeyCode::Left) {
+                    in_move.0 = Direction::Negative
+                };
+                if keys.pressed(KeyCode::Right) {
+                    in_move.0 = Direction::Positive
+                };
 
-                if keys.any_just_released([
-                    KeyCode::Up,
-                    KeyCode::Left,
-                    KeyCode::Right,
-                    KeyCode::Down,
-                ]) {
-                    *state = PlayerState::Idle;
+                match *state {
+                    PlayerState::Moving(no_move) => {
+                        *state = PlayerState::Idle;
+                    }
+                    PlayerState::Moving(_) => {
+                        println!("moving x: {:?}, y: {:?}", &in_move.0, &in_move.1);
+                        if in_move != no_move {
+                            *state = PlayerState::Moving(in_move);
+                        }
+                    }
+                    _ => {
+                        if in_move != no_move {
+                            *state = PlayerState::Moving(in_move);
+                        }
+                    }
                 }
             }
+        }
+    }
+}
+
+fn gamepad_ordered_events(mut gamepad_events: EventReader<GamepadEvent>) {
+    for gamepad_event in gamepad_events.iter() {
+        match gamepad_event {
+            GamepadEvent::Connection(connection_event) => info!("{:?}", connection_event),
+            GamepadEvent::Button(button_event) => info!("{:?}", button_event),
+            GamepadEvent::Axis(axis_event) => info!("{:?}", axis_event),
         }
     }
 }
