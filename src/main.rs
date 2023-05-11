@@ -3,16 +3,20 @@ use bevy::prelude::*;
 use bevy_framepace::Limiter;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
+use bevy_splash_screen::{SplashAssetType, SplashItem, SplashPlugin, SplashScreen};
+use bevy_tweening::EaseFunction;
+use std::time::Duration;
 
 mod player;
 use player::PlayerPlugin;
 
 mod main_menu;
-use main_menu::{cleanup_menu, menu, setup_menu};
+use main_menu::{cleanup_menu, generate_splashscreen, menu, setup_menu};
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
     #[default]
+    Splash,
     MainMenu,
     CharacterSelect,
     InGame,
@@ -41,12 +45,17 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
         )
+        .add_state::<AppState>()
+        .add_plugin(
+            SplashPlugin::new(AppState::Splash, AppState::MainMenu)
+                .skipable()
+                .add_screen(generate_splashscreen()),
+        )
         .add_plugin(bevy_framepace::FramepacePlugin)
         .add_system(fix_framerate.on_startup())
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugin(WorldInspectorPlugin::default())
-        .add_state::<AppState>()
         .add_plugin(PlayerPlugin)
         .add_system(setup_camera.on_startup())
         .add_system(setup_menu.in_schedule(OnEnter(AppState::MainMenu)))
