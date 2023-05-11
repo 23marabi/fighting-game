@@ -40,7 +40,7 @@ fn main() {
         )
         .add_state::<AppState>()
         .add_plugin(PlayerPlugin)
-        .add_system(setup.on_startup())
+        .add_system(setup_camera.on_startup())
         .add_system(setup_menu.in_schedule(OnEnter(AppState::MainMenu)))
         .add_system(menu.in_set(OnUpdate(AppState::MainMenu)))
         .add_system(cleanup_menu.in_schedule(OnExit(AppState::MainMenu)))
@@ -49,7 +49,7 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands) {
+fn setup_camera(mut commands: Commands) {
     commands.spawn((
         Camera2dBundle::default(),
         BloomSettings {

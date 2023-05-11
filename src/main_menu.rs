@@ -78,9 +78,15 @@ pub fn cleanup_menu(mut commands: Commands, menu_data: Res<MenuData>) {
     commands.entity(menu_data.button_entity).despawn_recursive();
 }
 
-pub fn setup_game(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(SpriteBundle {
-        texture: asset_server.load("branding/background.png"),
-        ..default()
-    });
+pub fn setup_game(mut commands: Commands, mut mesh_assets: ResMut<Assets<Mesh>>) {
+    let mesh: Handle<Mesh> = mesh_assets.add(shape::Box::new(1., 1., 1.).into());
+    for x in -10..10 {
+        for z in -10..10 {
+            commands.spawn(PbrBundle {
+                mesh: mesh.clone(),
+                transform: Transform::from_translation(Vec3::new(x as f32 * 2., 0., z as f32 * 2.)),
+                ..Default::default()
+            });
+        }
+    }
 }
