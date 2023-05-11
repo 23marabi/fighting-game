@@ -49,6 +49,7 @@ struct MovementData {
     acceleration: f32,
     friction: f32,
     max_speed: f32,
+    jump_speed: f32,
 }
 
 #[derive(Component)]
@@ -182,14 +183,15 @@ fn setup_physics(mut commands: Commands) {
         )))
         .insert(MovementData {
             velocity: Vec2::ZERO,
-            acceleration: 10.0,
-            friction: 1.0,
-            max_speed: 12.0,
+            acceleration: 5.0,
+            friction: 0.9,
+            max_speed: 8.0,
+            jump_speed: 25.0,
         })
         .insert(PlayerNumber(1));
     commands.spawn((
         PlayerNumber(1),
-        JumpTimer(Timer::from_seconds(0.15, TimerMode::Once)),
+        JumpTimer(Timer::from_seconds(0.35, TimerMode::Once)),
     ));
 
     commands
@@ -208,14 +210,15 @@ fn setup_physics(mut commands: Commands) {
         )))
         .insert(MovementData {
             velocity: Vec2::ZERO,
-            acceleration: 10.0,
-            friction: 1.0,
-            max_speed: 12.0,
+            acceleration: 5.0,
+            friction: 0.9,
+            max_speed: 8.0,
+            jump_speed: 25.0,
         })
         .insert(PlayerNumber(2));
     commands.spawn((
         PlayerNumber(2),
-        JumpTimer(Timer::from_seconds(0.15, TimerMode::Once)),
+        JumpTimer(Timer::from_seconds(0.35, TimerMode::Once)),
     ));
 }
 
@@ -287,7 +290,10 @@ fn update_physics(
             p1_to_move = p1_to_move.normalize_or_zero();
             if p1_to_move != Vec2::ZERO {
                 movement.velocity = movement.velocity.lerp(
-                    p1_to_move * movement.max_speed,
+                    Vec2::new(
+                        p1_to_move.x * movement.max_speed,
+                        p1_to_move.y * movement.jump_speed,
+                    ),
                     movement.acceleration * time.delta_seconds(),
                 );
             } else {
@@ -322,7 +328,10 @@ fn update_physics(
             p2_to_move = p2_to_move.normalize_or_zero();
             if p2_to_move != Vec2::ZERO {
                 movement.velocity = movement.velocity.lerp(
-                    p2_to_move * movement.max_speed,
+                    Vec2::new(
+                        p2_to_move.x * movement.max_speed,
+                        p2_to_move.y * movement.jump_speed,
+                    ),
                     movement.acceleration * time.delta_seconds(),
                 );
             } else {
