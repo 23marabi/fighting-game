@@ -5,11 +5,9 @@ use bevy::{
     },
     prelude::*,
 };
+use bevy_easings::Lerp;
 use bevy_rapier2d::prelude::*;
 
-const SPEED: f32 = 8.0;
-const JUMP_SPEED: f32 = 15.0;
-const FRICTION: f32 = 0.2;
 const GRAVITY: f32 = 9.8;
 
 #[derive(Component)]
@@ -41,10 +39,16 @@ struct PlayerBundle {
     _p: Player,
     state: PlayerState,
     num: PlayerNumber,
-    direction: Direction,
-    velocity: Velocity,
     // #[bundle]
     // sprite: SpriteBundle,
+}
+
+#[derive(Component, Default)]
+struct MovementData {
+    velocity: Vec2,
+    acceleration: f32,
+    friction: f32,
+    max_speed: f32,
 }
 
 #[derive(Component)]
@@ -95,8 +99,6 @@ fn add_players(mut commands: Commands, asset_server: Res<AssetServer>) {
             num: PlayerNumber(1),
             _p: Player,
             state: PlayerState::Idle,
-            direction: Direction(Vec2::ZERO),
-            velocity: Velocity(Vec2::ZERO),
             // sprite: SpriteBundle {
             //     texture: asset_server.load("characters/one.png"),
             //     transform: Transform::from_xyz(10., 10., 0.),
@@ -111,8 +113,6 @@ fn add_players(mut commands: Commands, asset_server: Res<AssetServer>) {
             num: PlayerNumber(2),
             _p: Player,
             state: PlayerState::Idle,
-            direction: Direction(Vec2::ZERO),
-            velocity: Velocity(Vec2::ZERO),
             // sprite: SpriteBundle {
             //     texture: asset_server.load("characters/one.png"),
             //     transform: Transform::from_xyz(100., 0., 0.),
@@ -139,40 +139,6 @@ fn check_player_state(query: Query<(&Name, &Health, &PlayerState), With<Player>>
     }
 }
 
-fn keyboard_input(
-    keys: Res<Input<KeyCode>>,
-    mut query: Query<(&PlayerNumber, &mut Velocity, &mut Direction), With<Player>>,
-) {
-    for (num, mut velocity, mut direction) in query.iter_mut() {
-        let mut x = 0;
-        let mut y = 0;
-        match num {
-            PlayerNumber(1) => {
-                x = keys.pressed(KeyCode::D) as i32 - keys.pressed(KeyCode::A) as i32;
-                y = keys.pressed(KeyCode::S) as i32 - keys.pressed(KeyCode::W) as i32;
-            }
-            PlayerNumber(2) => {
-                x = keys.pressed(KeyCode::Left) as i32 - keys.pressed(KeyCode::Right) as i32;
-                y = keys.pressed(KeyCode::Down) as i32 - keys.pressed(KeyCode::Up) as i32;
-            }
-            _ => {}
-        }
-
-        *direction = Direction(Vec2 {
-            x: x as f32,
-            y: y as f32,
-        });
-
-        if direction.0.length() > 1.0 {
-            direction.0.normalize();
-        }
-
-        let target_velocity = direction.0 * SPEED;
-        let old_velocity = velocity.0.clone();
-        velocity.0 += (target_velocity - old_velocity);
-    }
-}
-
 fn gamepad_ordered_events(mut gamepad_events: EventReader<GamepadEvent>) {
     for gamepad_event in gamepad_events.iter() {
         match gamepad_event {
@@ -184,10 +150,13 @@ fn gamepad_ordered_events(mut gamepad_events: EventReader<GamepadEvent>) {
 }
 
 fn setup_physics(mut commands: Commands) {
-    /* Create the ground. */
+    /* Create the ground & ceiling */
     commands
         .spawn(Collider::cuboid(575.0, 20.0))
         .insert(TransformBundle::from(Transform::from_xyz(0.0, -325.0, 0.0)));
+    commands
+        .spawn(Collider::cuboid(575.0, 20.0))
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, 325.0, 0.0)));
     /* Create the walls */
     commands
         .spawn(Collider::cuboid(20.0, 325.0))
@@ -204,13 +173,19 @@ fn setup_physics(mut commands: Commands) {
             ..default()
         })
         .insert(Collider::capsule(
-            Vec2::new(0.0, -50.0),
-            Vec2::new(0.0, 50.0),
-            50.0,
+            Vec2::new(0.0, -20.0),
+            Vec2::new(0.0, 20.0),
+            20.0,
         ))
         .insert(TransformBundle::from(Transform::from_xyz(
             -464.002, -254.0, 0.0,
         )))
+        .insert(MovementData {
+            velocity: Vec2::ZERO,
+            acceleration: 10.0,
+            friction: 1.0,
+            max_speed: 12.0,
+        })
         .insert(PlayerNumber(1));
     commands.spawn((
         PlayerNumber(1),
@@ -224,13 +199,19 @@ fn setup_physics(mut commands: Commands) {
             ..default()
         })
         .insert(Collider::capsule(
-            Vec2::new(0.0, -50.0),
-            Vec2::new(0.0, 50.0),
-            50.0,
+            Vec2::new(0.0, -20.0),
+            Vec2::new(0.0, 20.0),
+            20.0,
         ))
         .insert(TransformBundle::from(Transform::from_xyz(
             464.002, -254.0, 0.0,
         )))
+        .insert(MovementData {
+            velocity: Vec2::ZERO,
+            acceleration: 10.0,
+            friction: 1.0,
+            max_speed: 12.0,
+        })
         .insert(PlayerNumber(2));
     commands.spawn((
         PlayerNumber(2),
@@ -242,7 +223,11 @@ fn update_physics(
     mut commands: Commands,
     time: Res<Time>,
     mut timer_query: Query<(&PlayerNumber, &mut JumpTimer)>,
-    mut controllers: Query<(&PlayerNumber, &mut KinematicCharacterController)>,
+    mut controllers: Query<(
+        &PlayerNumber,
+        &mut MovementData,
+        &mut KinematicCharacterController,
+    )>,
     outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
     keyboard: Res<Input<KeyCode>>,
 ) {
@@ -253,34 +238,34 @@ fn update_physics(
         timer.0.tick(time.delta());
         if timer.0.finished() {
             if t_num == &PlayerNumber(1) {
-                p1_to_move.y -= GRAVITY;
+                p1_to_move.y -= 1.0;
             } else if t_num == &PlayerNumber(2) {
-                p2_to_move.y -= GRAVITY;
+                p2_to_move.y -= 1.0;
             }
         } else {
             if t_num == &PlayerNumber(1) {
-                p1_to_move.y += JUMP_SPEED;
+                p1_to_move.y += 1.0;
             } else if t_num == &PlayerNumber(2) {
-                p2_to_move.y += JUMP_SPEED;
+                p2_to_move.y += 1.0;
             }
         }
     }
 
     if keyboard.pressed(KeyCode::A) {
-        p1_to_move.x -= SPEED;
+        p1_to_move.x -= 1.0;
     }
     if keyboard.pressed(KeyCode::D) {
-        p1_to_move.x += SPEED;
+        p1_to_move.x += 1.0;
     }
 
     if keyboard.pressed(KeyCode::Left) {
-        p2_to_move.x -= SPEED;
+        p2_to_move.x -= 1.0;
     }
     if keyboard.pressed(KeyCode::Right) {
-        p2_to_move.x += SPEED;
+        p2_to_move.x += 1.0;
     }
 
-    for (num, mut controller) in controllers.iter_mut() {
+    for (num, mut movement, mut controller) in controllers.iter_mut() {
         if num == &PlayerNumber(1) {
             let mut on_ground = false;
             for (o_num, output) in outputs.iter() {
@@ -299,7 +284,23 @@ fn update_physics(
                 }
             }
 
-            controller.translation = Some(p1_to_move);
+            p1_to_move = p1_to_move.normalize_or_zero();
+            if p1_to_move != Vec2::ZERO {
+                movement.velocity = movement.velocity.lerp(
+                    p1_to_move * movement.max_speed,
+                    movement.acceleration * time.delta_seconds(),
+                );
+            } else {
+                movement.velocity = movement
+                    .velocity
+                    .lerp(Vec2::ZERO, movement.friction * time.delta_seconds());
+            }
+
+            let old_translation = match controller.translation {
+                Some(t) => t,
+                None => Vec2::ZERO,
+            };
+            controller.translation = Some(old_translation + movement.velocity);
         } else if num == &PlayerNumber(2) {
             let mut on_ground = false;
             for (o_num, output) in outputs.iter() {
@@ -318,7 +319,23 @@ fn update_physics(
                 }
             }
 
-            controller.translation = Some(p2_to_move);
+            p2_to_move = p2_to_move.normalize_or_zero();
+            if p2_to_move != Vec2::ZERO {
+                movement.velocity = movement.velocity.lerp(
+                    p2_to_move * movement.max_speed,
+                    movement.acceleration * time.delta_seconds(),
+                );
+            } else {
+                movement.velocity = movement
+                    .velocity
+                    .lerp(Vec2::ZERO, movement.friction * time.delta_seconds());
+            }
+
+            let old_translation = match controller.translation {
+                Some(t) => t,
+                None => Vec2::ZERO,
+            };
+            controller.translation = Some(old_translation + movement.velocity);
         }
     }
 }

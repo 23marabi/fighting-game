@@ -26,6 +26,7 @@ bevy_rapier2d = { version = "*", features = [ "enhanced-determinism", "debug-ren
 bevy-inspector-egui = "0.18.3"
 bevy_splash_screen = "0.3.0"
 bevy_tweening = "0.7.0"
+bevy_easings = "0.10.0"
 
 [patch.crates-io]
 bevy_tweening = { git = "https://github.com/sibsibsib/bevy_tweening", branch = "mirrored_repeat_fix" }
