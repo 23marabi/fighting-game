@@ -5,16 +5,12 @@ use bevy::{
     },
     prelude::*,
 };
-use std::time::Duration;
+use bevy_rapier2d::prelude::*;
 
-const SPEED: f32 = 200.0;
-const JUMP_SPEED: f32 = 1000.0;
-const GRAVITY: f32 = 500.0;
+const SPEED: f32 = 500.0;
+const FRICTION: f32 = 2.0;
 
 pub struct PlayerPlugin;
-
-#[derive(Component)]
-struct JumpTimer(Timer);
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
@@ -22,7 +18,9 @@ impl Plugin for PlayerPlugin {
             .add_system(gamepad_ordered_events)
             .add_system(check_player_state.in_set(OnUpdate(AppState::InGame)))
             .add_system(keyboard_input.in_set(OnUpdate(AppState::InGame)))
-            .add_system(player_animation.in_set(OnUpdate(AppState::InGame)))
+            .add_system(init_physics.in_schedule(OnEnter(AppState::InGame)))
+            .add_system(update_physics.in_set(OnUpdate(AppState::InGame)))
+            .add_system(read_result_system.in_set(OnUpdate(AppState::InGame)))
             .add_system(
                 add_players
                     .in_schedule(OnEnter(AppState::InGame))
@@ -38,18 +36,17 @@ struct PlayerBundle {
     _p: Player,
     state: PlayerState,
     num: PlayerNumber,
-    _d: Dead,
-    _j: Jumping,
-
-    #[bundle]
-    sprite: SpriteBundle,
+    direction: Direction,
+    velocity: Velocity,
+    // #[bundle]
+    // sprite: SpriteBundle,
 }
 
 #[derive(Component)]
-struct Dead(bool);
+struct Direction(Vec2);
 
 #[derive(Component)]
-struct Jumping(bool);
+struct Velocity(Vec2);
 
 #[derive(Component)]
 struct Player;
@@ -67,16 +64,6 @@ enum AttackState {
     Recovery,
 }
 
-#[derive(Component, Debug, PartialEq, Copy, Clone)]
-enum Direction {
-    Negative = -1,
-    Center = 0,
-    Positive = 1,
-}
-
-#[derive(Component, Debug, PartialEq, Copy, Clone)]
-struct Movement(Direction, Direction);
-
 #[derive(Component)]
 enum BlockState {
     Warmup,
@@ -87,12 +74,12 @@ enum BlockState {
 #[derive(Component)]
 enum PlayerState {
     Idle,
-    Moving(Movement),
+    Moving,
     Attacking(AttackState),
     Blocking(BlockState),
 }
 
-#[derive(Component, PartialEq)]
+#[derive(Component, PartialEq, Debug)]
 struct PlayerNumber(u8);
 
 fn add_players(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -103,13 +90,13 @@ fn add_players(mut commands: Commands, asset_server: Res<AssetServer>) {
             num: PlayerNumber(1),
             _p: Player,
             state: PlayerState::Idle,
-            _d: Dead(false),
-            _j: Jumping(false),
-            sprite: SpriteBundle {
-                texture: asset_server.load("characters/one.png"),
-                transform: Transform::from_xyz(10., 10., 0.),
-                ..default()
-            },
+            direction: Direction(Vec2::ZERO),
+            velocity: Velocity(Vec2::ZERO),
+            // sprite: SpriteBundle {
+            //     texture: asset_server.load("characters/one.png"),
+            //     transform: Transform::from_xyz(10., 10., 0.),
+            //     ..default()
+            // },
         }),
     );
     commands.spawn(
@@ -119,13 +106,13 @@ fn add_players(mut commands: Commands, asset_server: Res<AssetServer>) {
             num: PlayerNumber(2),
             _p: Player,
             state: PlayerState::Idle,
-            _d: Dead(false),
-            _j: Jumping(false),
-            sprite: SpriteBundle {
-                texture: asset_server.load("characters/one.png"),
-                transform: Transform::from_xyz(100., 0., 0.),
-                ..default()
-            },
+            direction: Direction(Vec2::ZERO),
+            velocity: Velocity(Vec2::ZERO),
+            // sprite: SpriteBundle {
+            //     texture: asset_server.load("characters/one.png"),
+            //     transform: Transform::from_xyz(100., 0., 0.),
+            //     ..default()
+            // },
         }),
     );
 }
@@ -140,114 +127,44 @@ fn check_player_state(query: Query<(&Name, &Health, &PlayerState), With<Player>>
     for (name, health, state) in &query {
         match state {
             PlayerState::Idle => println!("{} ({}HP) is Idling", name.0, health.0),
-            PlayerState::Moving(d) => println!("{} ({}HP) is Moving {:?}", name.0, health.0, d),
+            PlayerState::Moving => println!("{} ({}HP) is Moving", name.0, health.0),
             PlayerState::Attacking(_) => println!("{} ({}HP) is Attacking", name.0, health.0),
             PlayerState::Blocking(_) => println!("{} ({}HP) is Blocking", name.0, health.0),
-            _ => {}
         }
     }
 }
 
 fn keyboard_input(
-    mut commands: Commands,
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(&PlayerNumber, &mut PlayerState), With<Player>>,
-    mut timer_query: Query<(Entity, &PlayerNumber, &mut JumpTimer)>,
-    time: Res<Time>,
+    mut query: Query<(&PlayerNumber, &mut Velocity, &mut Direction), With<Player>>,
 ) {
-    for (num, mut state) in query.iter_mut() {
+    for (num, mut velocity, mut direction) in query.iter_mut() {
+        let mut x = 0;
+        let mut y = 0;
         match num {
             PlayerNumber(1) => {
-                let mut in_move = Movement(Direction::Center, Direction::Center);
-                let no_move = Movement(Direction::Center, Direction::Center);
-
-                if keys.just_pressed(KeyCode::W) {
-                    in_move.1 = Direction::Positive;
-                    commands.spawn((
-                        JumpTimer(Timer::new(Duration::from_millis(500), TimerMode::Once)),
-                        PlayerNumber(1),
-                    ));
-                }
-
-                for (entity, player, mut timer) in timer_query.iter_mut() {
-                    if player == &PlayerNumber(1) {
-                        timer.0.tick(time.delta());
-                        if timer.0.finished() && in_move.1 == Direction::Positive {
-                            in_move.1 = Direction::Center;
-                            commands.entity(entity).despawn();
-                        } else if timer.0.finished() && keys.just_pressed(KeyCode::W) {
-                            in_move.1 = Direction::Positive;
-                            commands.entity(entity).despawn();
-                            commands.spawn((
-                                JumpTimer(Timer::new(Duration::from_millis(500), TimerMode::Once)),
-                                PlayerNumber(1),
-                            ));
-                        } else if !timer.0.finished() {
-                            in_move.1 = Direction::Positive;
-                        }
-                    }
-                }
-                if keys.pressed(KeyCode::S) {
-                    in_move.1 = Direction::Negative
-                };
-                if keys.pressed(KeyCode::A) {
-                    in_move.0 = Direction::Negative
-                };
-                if keys.pressed(KeyCode::D) {
-                    in_move.0 = Direction::Positive
-                };
-
-                match *state {
-                    PlayerState::Moving(no_move) => {
-                        *state = PlayerState::Idle;
-                    }
-                    PlayerState::Moving(_) => {
-                        println!("moving x: {:?}, y: {:?}", &in_move.0, &in_move.1);
-                        if in_move != no_move {
-                            *state = PlayerState::Moving(in_move);
-                        }
-                    }
-                    _ => {
-                        if in_move != no_move {
-                            *state = PlayerState::Moving(in_move);
-                        }
-                    }
-                }
+                x = keys.pressed(KeyCode::A) as i32 - keys.pressed(KeyCode::D) as i32;
+                y = keys.pressed(KeyCode::S) as i32 - keys.pressed(KeyCode::W) as i32;
             }
-            _ => {
-                let mut in_move = Movement(Direction::Center, Direction::Center);
-                let no_move = Movement(Direction::Center, Direction::Center);
-                if keys.pressed(KeyCode::Up) {
-                    in_move.1 = Direction::Positive
-                };
-                if keys.pressed(KeyCode::Down) {
-                    in_move.1 = Direction::Negative
-                };
-                if keys.pressed(KeyCode::Left) {
-                    in_move.0 = Direction::Negative
-                };
-                if keys.pressed(KeyCode::Right) {
-                    in_move.0 = Direction::Positive
-                };
-
-                match *state {
-                    PlayerState::Moving(no_move) => {
-                        *state = PlayerState::Idle;
-                    }
-                    PlayerState::Moving(_) => {
-                        println!("moving x: {:?}, y: {:?}", &in_move.0, &in_move.1);
-                        if in_move != no_move {
-                            *state = PlayerState::Moving(in_move);
-                        }
-                    }
-                    _ => {
-                        if in_move != no_move {
-                            *state = PlayerState::Moving(in_move);
-                        }
-                    }
-                }
+            PlayerNumber(2) => {
+                x = keys.pressed(KeyCode::Left) as i32 - keys.pressed(KeyCode::Right) as i32;
+                y = keys.pressed(KeyCode::Down) as i32 - keys.pressed(KeyCode::Up) as i32;
             }
+            _ => {}
         }
+
+        *direction = Direction(Vec2 {
+            x: x as f32,
+            y: y as f32,
+        });
+
+        if direction.0.length() > 1.0 {
+            direction.0.normalize();
+        }
+
+        let target_velocity = direction.0 * SPEED;
+        let old_velocity = velocity.0.clone();
+        velocity.0 += (target_velocity - old_velocity) * FRICTION;
     }
 }
 
@@ -261,29 +178,37 @@ fn gamepad_ordered_events(mut gamepad_events: EventReader<GamepadEvent>) {
     }
 }
 
-fn player_animation(
-    time: Res<Time>,
-    mut sprites: Query<(&PlayerState, &mut Transform), With<Player>>,
+fn init_physics(mut commands: Commands) {
+    commands
+        .spawn(RigidBody::KinematicPositionBased)
+        .insert(Collider::capsule(
+            Vec2::new(0.0, 20.0),
+            Vec2::new(0.0, -20.0),
+            20.0,
+        ))
+        .insert(KinematicCharacterController::default())
+        .insert(PlayerNumber(1));
+}
+
+fn update_physics(
+    mut controllers: Query<(&PlayerNumber, &mut KinematicCharacterController)>,
+    mut velocities: Query<(&PlayerNumber, &mut Velocity)>,
 ) {
-    for (state, mut transform) in &mut sprites {
-        match *state {
-            PlayerState::Moving(p_move) => {
-                println!("x: {:?}, y{:?}", &p_move.0, &p_move.1);
-                match &p_move.0 {
-                    &Direction::Positive => transform.translation.x += SPEED * time.delta_seconds(),
-                    &Direction::Negative => transform.translation.x -= SPEED * time.delta_seconds(),
-                    _ => {}
-                }
-                match &p_move.1 {
-                    &Direction::Positive => {
-                        transform.translation.y += JUMP_SPEED * time.delta_seconds()
-                    }
-                    &Direction::Negative => transform.translation.y -= SPEED * time.delta_seconds(),
-                    &Direction::Center => transform.translation.y -= GRAVITY * time.delta_seconds(),
-                    _ => {}
-                }
+    for (num, mut controller) in controllers.iter_mut() {
+        for (v_num, mut velocity) in velocities.iter_mut() {
+            if v_num == num {
+                controller.translation = Some(velocity.0);
+                println!("Player {:?} Controller", num);
             }
-            _ => transform.translation.y -= GRAVITY * time.delta_seconds(),
         }
+    }
+}
+
+fn read_result_system(controllers: Query<(Entity, &KinematicCharacterControllerOutput)>) {
+    for (entity, output) in controllers.iter() {
+        println!(
+            "Entity {:?} moved by {:?} and touches the ground: {:?}",
+            entity, output.effective_translation, output.grounded
+        );
     }
 }
