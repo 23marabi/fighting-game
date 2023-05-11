@@ -196,13 +196,18 @@ fn setup_physics(mut commands: Commands) {
         .spawn(Collider::cuboid(20.0, 325.0))
         .insert(TransformBundle::from(Transform::from_xyz(575.0, 0.0, 0.0)));
 
+    /* Create the Players */
     commands
         .spawn(KinematicCharacterController {
             custom_mass: Some(10.0),
             filter_flags: QueryFilterFlags::EXCLUDE_KINEMATIC,
             ..default()
         })
-        .insert(Collider::ball(50.0))
+        .insert(Collider::capsule(
+            Vec2::new(0.0, -50.0),
+            Vec2::new(0.0, 50.0),
+            50.0,
+        ))
         .insert(TransformBundle::from(Transform::from_xyz(
             -464.002, -254.0, 0.0,
         )))
@@ -211,13 +216,18 @@ fn setup_physics(mut commands: Commands) {
         PlayerNumber(1),
         JumpTimer(Timer::from_seconds(0.15, TimerMode::Once)),
     ));
+
     commands
         .spawn(KinematicCharacterController {
             custom_mass: Some(10.0),
             filter_flags: QueryFilterFlags::EXCLUDE_KINEMATIC,
             ..default()
         })
-        .insert(Collider::ball(50.0))
+        .insert(Collider::capsule(
+            Vec2::new(0.0, -50.0),
+            Vec2::new(0.0, 50.0),
+            50.0,
+        ))
         .insert(TransformBundle::from(Transform::from_xyz(
             464.002, -254.0, 0.0,
         )))

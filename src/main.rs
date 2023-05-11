@@ -11,7 +11,7 @@ mod player;
 use player::PlayerPlugin;
 
 mod main_menu;
-use main_menu::{cleanup_menu, generate_splashscreen, menu, setup_menu};
+use main_menu::{cleanup_menu, menu, setup_menu, title_splashscreen};
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
@@ -49,7 +49,7 @@ fn main() {
         .add_plugin(
             SplashPlugin::new(AppState::Splash, AppState::MainMenu)
                 .skipable()
-                .add_screen(generate_splashscreen()),
+                .add_screen(title_splashscreen()),
         )
         .add_plugin(bevy_framepace::FramepacePlugin)
         .add_system(fix_framerate.on_startup())

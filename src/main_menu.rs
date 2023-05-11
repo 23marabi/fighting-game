@@ -82,7 +82,7 @@ pub fn cleanup_menu(mut commands: Commands, menu_data: Res<MenuData>) {
     commands.entity(menu_data.button_entity).despawn_recursive();
 }
 
-pub fn generate_splashscreen() -> SplashScreen {
+pub fn title_splashscreen() -> SplashScreen {
     SplashScreen {
         brands: vec![
             SplashItem {
