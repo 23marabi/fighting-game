@@ -21,4 +21,6 @@ rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
 [dependencies]
 bevy = { version = "0.10.1", features = ["dynamic_linking"] }
-bevy_rapier2d = { version = "*", features = [ "enhanced-determinism" ] }
+bevy_framepace = "0.12.1"
+bevy_rapier2d = { version = "*", features = [ "enhanced-determinism", "debug-render-2d" ] }
+bevy-inspector-egui = "0.18.3"

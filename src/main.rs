@@ -1,5 +1,7 @@
 use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::prelude::*;
+use bevy_framepace::Limiter;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
 
 mod player;
@@ -39,15 +41,17 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
         )
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(bevy_framepace::FramepacePlugin)
+        .add_system(fix_framerate.on_startup())
         .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+        .add_plugin(WorldInspectorPlugin::default())
         .add_state::<AppState>()
         .add_plugin(PlayerPlugin)
         .add_system(setup_camera.on_startup())
         .add_system(setup_menu.in_schedule(OnEnter(AppState::MainMenu)))
         .add_system(menu.in_set(OnUpdate(AppState::MainMenu)))
         .add_system(cleanup_menu.in_schedule(OnExit(AppState::MainMenu)))
-        .add_system(setup_physics.in_schedule(OnEnter(AppState::InGame)))
         .add_system(bevy::window::close_on_esc.in_set(OnUpdate(AppState::MainMenu)))
         .run();
 }
@@ -62,16 +66,6 @@ fn setup_camera(mut commands: Commands) {
     ));
 }
 
-fn setup_physics(mut commands: Commands) {
-    /* Create the ground. */
-    commands
-        .spawn(Collider::cuboid(575.0, 20.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -325.0, 0.0)));
-    /* Create the walls */
-    commands
-        .spawn(Collider::cuboid(20.0, 325.0))
-        .insert(TransformBundle::from(Transform::from_xyz(-575.0, 0.0, 0.0)));
-    commands
-        .spawn(Collider::cuboid(20.0, 325.0))
-        .insert(TransformBundle::from(Transform::from_xyz(575.0, 0.0, 0.0)));
+fn fix_framerate(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
+    settings.limiter = Limiter::from_framerate(60.0);
 }

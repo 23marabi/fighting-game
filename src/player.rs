@@ -7,8 +7,13 @@ use bevy::{
 };
 use bevy_rapier2d::prelude::*;
 
-const SPEED: f32 = 500.0;
-const FRICTION: f32 = 2.0;
+const SPEED: f32 = 8.0;
+const JUMP_SPEED: f32 = 15.0;
+const FRICTION: f32 = 0.2;
+const GRAVITY: f32 = 9.8;
+
+#[derive(Component)]
+struct JumpTimer(Timer);
 
 pub struct PlayerPlugin;
 
@@ -16,11 +21,11 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(greet_players.in_schedule(OnEnter(AppState::InGame)))
             .add_system(gamepad_ordered_events)
-            .add_system(check_player_state.in_set(OnUpdate(AppState::InGame)))
-            .add_system(keyboard_input.in_set(OnUpdate(AppState::InGame)))
-            .add_system(init_physics.in_schedule(OnEnter(AppState::InGame)))
+            // .add_system(init_physics.in_schedule(OnEnter(AppState::InGame)))
+            // .add_system(check_player_state.in_set(OnUpdate(AppState::InGame)))
+            // .add_system(keyboard_input.in_set(OnUpdate(AppState::InGame)))
+            .add_system(setup_physics.in_schedule(OnEnter(AppState::InGame)))
             .add_system(update_physics.in_set(OnUpdate(AppState::InGame)))
-            .add_system(read_result_system.in_set(OnUpdate(AppState::InGame)))
             .add_system(
                 add_players
                     .in_schedule(OnEnter(AppState::InGame))
@@ -143,7 +148,7 @@ fn keyboard_input(
         let mut y = 0;
         match num {
             PlayerNumber(1) => {
-                x = keys.pressed(KeyCode::A) as i32 - keys.pressed(KeyCode::D) as i32;
+                x = keys.pressed(KeyCode::D) as i32 - keys.pressed(KeyCode::A) as i32;
                 y = keys.pressed(KeyCode::S) as i32 - keys.pressed(KeyCode::W) as i32;
             }
             PlayerNumber(2) => {
@@ -164,7 +169,7 @@ fn keyboard_input(
 
         let target_velocity = direction.0 * SPEED;
         let old_velocity = velocity.0.clone();
-        velocity.0 += (target_velocity - old_velocity) * FRICTION;
+        velocity.0 += (target_velocity - old_velocity);
     }
 }
 
@@ -178,37 +183,132 @@ fn gamepad_ordered_events(mut gamepad_events: EventReader<GamepadEvent>) {
     }
 }
 
-fn init_physics(mut commands: Commands) {
+fn setup_physics(mut commands: Commands) {
+    /* Create the ground. */
     commands
-        .spawn(RigidBody::KinematicPositionBased)
-        .insert(Collider::capsule(
-            Vec2::new(0.0, 20.0),
-            Vec2::new(0.0, -20.0),
-            20.0,
-        ))
-        .insert(KinematicCharacterController::default())
+        .spawn(Collider::cuboid(575.0, 20.0))
+        .insert(TransformBundle::from(Transform::from_xyz(0.0, -325.0, 0.0)));
+    /* Create the walls */
+    commands
+        .spawn(Collider::cuboid(20.0, 325.0))
+        .insert(TransformBundle::from(Transform::from_xyz(-575.0, 0.0, 0.0)));
+    commands
+        .spawn(Collider::cuboid(20.0, 325.0))
+        .insert(TransformBundle::from(Transform::from_xyz(575.0, 0.0, 0.0)));
+
+    commands
+        .spawn(KinematicCharacterController {
+            custom_mass: Some(10.0),
+            filter_flags: QueryFilterFlags::EXCLUDE_KINEMATIC,
+            ..default()
+        })
+        .insert(Collider::ball(50.0))
+        .insert(TransformBundle::from(Transform::from_xyz(
+            -464.002, -254.0, 0.0,
+        )))
         .insert(PlayerNumber(1));
+    commands.spawn((
+        PlayerNumber(1),
+        JumpTimer(Timer::from_seconds(0.15, TimerMode::Once)),
+    ));
+    commands
+        .spawn(KinematicCharacterController {
+            custom_mass: Some(10.0),
+            filter_flags: QueryFilterFlags::EXCLUDE_KINEMATIC,
+            ..default()
+        })
+        .insert(Collider::ball(50.0))
+        .insert(TransformBundle::from(Transform::from_xyz(
+            464.002, -254.0, 0.0,
+        )))
+        .insert(PlayerNumber(2));
+    commands.spawn((
+        PlayerNumber(2),
+        JumpTimer(Timer::from_seconds(0.15, TimerMode::Once)),
+    ));
 }
 
 fn update_physics(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut timer_query: Query<(&PlayerNumber, &mut JumpTimer)>,
     mut controllers: Query<(&PlayerNumber, &mut KinematicCharacterController)>,
-    mut velocities: Query<(&PlayerNumber, &mut Velocity)>,
+    outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
+    keyboard: Res<Input<KeyCode>>,
 ) {
-    for (num, mut controller) in controllers.iter_mut() {
-        for (v_num, mut velocity) in velocities.iter_mut() {
-            if v_num == num {
-                controller.translation = Some(velocity.0);
-                println!("Player {:?} Controller", num);
+    let mut p1_to_move = Vec2::ZERO;
+    let mut p2_to_move = Vec2::ZERO;
+
+    for (t_num, mut timer) in &mut timer_query {
+        timer.0.tick(time.delta());
+        if timer.0.finished() {
+            if t_num == &PlayerNumber(1) {
+                p1_to_move.y -= GRAVITY;
+            } else if t_num == &PlayerNumber(2) {
+                p2_to_move.y -= GRAVITY;
+            }
+        } else {
+            if t_num == &PlayerNumber(1) {
+                p1_to_move.y += JUMP_SPEED;
+            } else if t_num == &PlayerNumber(2) {
+                p2_to_move.y += JUMP_SPEED;
             }
         }
     }
-}
 
-fn read_result_system(controllers: Query<(Entity, &KinematicCharacterControllerOutput)>) {
-    for (entity, output) in controllers.iter() {
-        println!(
-            "Entity {:?} moved by {:?} and touches the ground: {:?}",
-            entity, output.effective_translation, output.grounded
-        );
+    if keyboard.pressed(KeyCode::A) {
+        p1_to_move.x -= SPEED;
+    }
+    if keyboard.pressed(KeyCode::D) {
+        p1_to_move.x += SPEED;
+    }
+
+    if keyboard.pressed(KeyCode::Left) {
+        p2_to_move.x -= SPEED;
+    }
+    if keyboard.pressed(KeyCode::Right) {
+        p2_to_move.x += SPEED;
+    }
+
+    for (num, mut controller) in controllers.iter_mut() {
+        if num == &PlayerNumber(1) {
+            let mut on_ground = false;
+            for (o_num, output) in outputs.iter() {
+                if o_num == &PlayerNumber(1) {
+                    on_ground = output.clone().grounded;
+                }
+            }
+
+            if keyboard.just_pressed(KeyCode::W) && on_ground {
+                for (t_num, mut timer) in &mut timer_query {
+                    if t_num == &PlayerNumber(1) {
+                        if timer.0.finished() {
+                            timer.0.reset();
+                        }
+                    }
+                }
+            }
+
+            controller.translation = Some(p1_to_move);
+        } else if num == &PlayerNumber(2) {
+            let mut on_ground = false;
+            for (o_num, output) in outputs.iter() {
+                if o_num == &PlayerNumber(2) {
+                    on_ground = output.clone().grounded;
+                }
+            }
+
+            if keyboard.just_pressed(KeyCode::Up) && on_ground {
+                for (t_num, mut timer) in &mut timer_query {
+                    if t_num == &PlayerNumber(2) {
+                        if timer.0.finished() {
+                            timer.0.reset();
+                        }
+                    }
+                }
+            }
+
+            controller.translation = Some(p2_to_move);
+        }
     }
 }
