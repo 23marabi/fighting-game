@@ -59,6 +59,7 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_system(setup_camera.on_startup())
         .add_system(setup_menu.in_schedule(OnEnter(AppState::MainMenu)))
+        .add_system(setup_game.in_schedule(OnEnter(AppState::InGame)))
         .add_system(menu.in_set(OnUpdate(AppState::MainMenu)))
         .add_system(cleanup_menu.in_schedule(OnExit(AppState::MainMenu)))
         .add_system(bevy::window::close_on_esc.in_set(OnUpdate(AppState::MainMenu)))
@@ -77,4 +78,12 @@ fn setup_camera(mut commands: Commands) {
 
 fn fix_framerate(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
     settings.limiter = Limiter::from_framerate(60.0);
+}
+
+fn setup_game(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(SpriteBundle {
+        transform: Transform::from_scale(Vec3::new(1.0, 1.0, 0.0)),
+        texture: asset_server.load("background.png"),
+        ..default()
+    });
 }

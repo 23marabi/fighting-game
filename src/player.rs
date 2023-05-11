@@ -170,6 +170,7 @@ fn setup_physics(mut commands: Commands) {
     commands
         .spawn(KinematicCharacterController {
             custom_mass: Some(10.0),
+            offset: CharacterLength::Absolute(1.0),
             filter_flags: QueryFilterFlags::EXCLUDE_KINEMATIC,
             ..default()
         })
@@ -197,6 +198,7 @@ fn setup_physics(mut commands: Commands) {
     commands
         .spawn(KinematicCharacterController {
             custom_mass: Some(10.0),
+            offset: CharacterLength::Absolute(1.0),
             filter_flags: QueryFilterFlags::EXCLUDE_KINEMATIC,
             ..default()
         })
