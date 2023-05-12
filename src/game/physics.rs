@@ -1,11 +1,5 @@
 use crate::AppState;
-use bevy::{
-    input::gamepad::{
-        GamepadAxisChangedEvent, GamepadButtonChangedEvent, GamepadConnectionEvent, GamepadEvent,
-    },
-    prelude::*,
-};
-use bevy_easings::Lerp;
+use bevy::{input::gamepad::GamepadEvent, prelude::*};
 use bevy_rapier2d::prelude::*;
 
 use crate::game::player::PlayerNumber;
