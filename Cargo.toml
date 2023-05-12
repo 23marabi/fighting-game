@@ -19,13 +19,42 @@ codegen-units = 1
 rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
 [dependencies]
-bevy = { version = "0.10.1" }
+bevy = { version = "0.10.1", default-features = false }
 bevy_framepace = "0.12.1"
 bevy_rapier2d = { version = "*", features = [ "enhanced-determinism", "debug-render-2d" ] }
 bevy-inspector-egui = "0.18.3"
 bevy_splash_screen = "0.3.0"
 bevy_tweening = "0.7.0"
 bevy_easings = "0.10.0"
+bevy_kira_audio = { version = "0.15.0", features = [ "mp3", "wav" ] }
 
 [patch.crates-io]
 bevy_tweening = { git = "https://github.com/sibsibsib/bevy_tweening", branch = "mirrored_repeat_fix" }
+
+[features]
+dev = [
+    "bevy/bevy_dylib",
+]
+
+# Bevy defaults minus audio and some other not needed things
+# see https://github.com/bevyengine/bevy/blob/main/Cargo.toml#L31-L54
+default = [
+    "bevy/animation",
+    "bevy/bevy_asset",
+    "bevy/bevy_scene",
+    "bevy/bevy_winit",
+    "bevy/bevy_core_pipeline",
+    "bevy/bevy_pbr",
+    "bevy/bevy_gltf",
+    "bevy/bevy_render",
+    "bevy/bevy_sprite",
+    "bevy/bevy_text",
+    "bevy/bevy_ui",
+    "bevy/png",
+    "bevy/hdr",
+    "bevy/zstd",
+    "bevy/x11",
+    "bevy/ktx2",
+    "bevy/filesystem_watcher",
+    "bevy/tonemapping_luts"
+]

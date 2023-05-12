@@ -4,6 +4,8 @@ mod game;
 use game::GamePlugin;
 mod ui;
 use ui::UiPlugin;
+mod sound;
+use sound::SoundPlugin;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
@@ -40,5 +42,6 @@ fn main() {
         .add_state::<AppState>()
         .add_plugin(GamePlugin)
         .add_plugin(UiPlugin)
+        .add_plugin(SoundPlugin)
         .run();
 }
