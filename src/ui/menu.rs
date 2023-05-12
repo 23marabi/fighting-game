@@ -1,9 +1,16 @@
 use crate::AppState;
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
-use bevy_splash_screen::{SplashAssetType, SplashItem, SplashPlugin, SplashScreen};
-use bevy_tweening::EaseFunction;
-use std::time::Duration;
+
+pub struct MenuPlugin;
+
+impl Plugin for MenuPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system(setup_menu.on_startup())
+            .add_system(menu.in_set(OnUpdate(AppState::MainMenu)))
+            .add_system(cleanup_menu.in_schedule(OnExit(AppState::MainMenu)))
+            .add_system(bevy::window::close_on_esc.in_set(OnUpdate(AppState::MainMenu)));
+    }
+}
 
 #[derive(Resource)]
 pub struct MenuData {
@@ -80,58 +87,4 @@ pub fn menu(
 
 pub fn cleanup_menu(mut commands: Commands, menu_data: Res<MenuData>) {
     commands.entity(menu_data.button_entity).despawn_recursive();
-}
-
-pub fn title_splashscreen() -> SplashScreen {
-    SplashScreen {
-        brands: vec![
-            SplashItem {
-                asset: SplashAssetType::SingleText(
-                    Text::from_sections([
-                        TextSection::new(
-                            "Fighting Game\n",
-                            TextStyle {
-                                font_size: 40.,
-                                color: Color::WHITE,
-                                ..default()
-                            },
-                        ),
-                        TextSection::new(
-                            "by\n",
-                            TextStyle {
-                                font_size: 24.,
-                                color: Color::WHITE.with_a(0.75),
-                                ..default()
-                            },
-                        ),
-                        TextSection::new(
-                            "Erin, tqbed, Alyx",
-                            TextStyle {
-                                font_size: 32.,
-                                color: Color::WHITE,
-                                ..default()
-                            },
-                        ),
-                    ])
-                    .with_alignment(TextAlignment::Center),
-                    "fonts/Atkinson-Bold.ttf".to_string(),
-                ),
-                tint: Color::WHITE,
-                size: Size::new(Val::Percent(25.), Val::Px(150.)),
-                ease_function: EaseFunction::QuarticInOut.into(),
-                duration: Duration::from_secs_f32(3.),
-                is_static: false,
-            },
-            SplashItem {
-                asset: SplashAssetType::SingleImage("branding/icon.png".to_string()),
-                tint: Color::WHITE,
-                size: Size::new(Val::Px(128.), Val::Px(128.)),
-                ease_function: EaseFunction::QuinticInOut.into(),
-                duration: Duration::from_secs_f32(3.),
-                is_static: true,
-            },
-        ],
-        background_color: BackgroundColor(Color::BLACK),
-        ..default()
-    }
 }
