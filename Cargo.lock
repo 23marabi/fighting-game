@@ -784,6 +784,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_proto"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f67fd0e38b5b699516228a12d35d6e1a1f1d2d06ab5ed36ff9f51c4f1131f19"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "bevy_proto_backend",
+ "path-clean",
+ "ron",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "bevy_proto_backend"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c770da60625b620784ba730441155cdd03d135b3a19a326b68a09c22bfa9a3ab"
+dependencies = [
+ "anyhow",
+ "bevy",
+ "bevy_proto_derive",
+ "indexmap",
+ "parking_lot",
+ "path-clean",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "bevy_proto_derive"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "176d8832a7a077c1e30d980da4765680b14c39fa00cfcf5f84a245fb49704142"
+dependencies = [
+ "optional-error",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.15",
+ "to_phantom",
+]
+
+[[package]]
 name = "bevy_ptr"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1712,6 +1757,7 @@ dependencies = [
  "bevy_easings",
  "bevy_framepace",
  "bevy_kira_audio",
+ "bevy_proto",
  "bevy_rapier2d",
  "bevy_splash_screen",
  "bevy_tweening",
@@ -2815,6 +2861,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "978aa494585d3ca4ad74929863093e87cac9790d81fe7aba2b3dc2890643a0fc"
 
 [[package]]
+name = "optional-error"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc7918366ef0125b2d6a3d0f6ea28e437cbecddfea36804f1e7a27ace25e7a32"
+dependencies = [
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "orbclient"
 version = "0.3.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2894,6 +2949,12 @@ name = "paste"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f746c4065a8fa3fe23974dd82f15431cc8d40779821001404d10d2e79ca7d79"
+
+[[package]]
+name = "path-clean"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17359afc20d7ab31fdb42bb844c8b3bb1dabd7dcf7e68428492da7f16966fcef"
 
 [[package]]
 name = "peeking_take_while"
@@ -3559,6 +3620,17 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
+
+[[package]]
+name = "to_phantom"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d1a5f35ab1d1b595b5cdb39e4dd358a8e2cd15ecf0d9df736e959381927e5de"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.15",
+]
 
 [[package]]
 name = "toml_datetime"

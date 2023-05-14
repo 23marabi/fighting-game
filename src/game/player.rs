@@ -1,28 +1,53 @@
 use crate::AppState;
 use bevy::prelude::*;
+use bevy_proto::prelude::*;
+use std::fmt;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(greet_players.in_schedule(OnEnter(AppState::InGame)))
+            .register_type::<Player>()
+            .add_system(load.in_schedule(OnEnter(AppState::MainMenu)))
             .add_system(
                 add_players
+                    .run_if(prototype_ready("Bridget"))
                     .in_schedule(OnEnter(AppState::InGame))
                     .before(greet_players),
             );
     }
 }
 
-#[derive(Bundle)]
-struct PlayerBundle {
-    name: Name,
-    hp: Health,
-    _p: Player,
-    state: PlayerState,
-    num: PlayerNumber,
-    // #[bundle]
-    // sprite: SpriteBundle,
+impl Schematic for Player {
+    type Input = PlayerSetup;
+
+    fn apply(input: &Self::Input, context: &mut SchematicContext) {
+        context
+            .entity_mut()
+            .unwrap()
+            .insert(Name(input.name.clone()))
+            .insert(Health(input.health))
+            .insert(PlayerNumber(input.number))
+            .insert(PlayerState::Idle);
+    }
+
+    fn remove(_input: &Self::Input, context: &mut SchematicContext) {
+        context
+            .entity_mut()
+            .unwrap()
+            .remove::<Name>()
+            .remove::<Health>()
+            .remove::<PlayerNumber>()
+            .remove::<PlayerState>();
+    }
+}
+
+#[derive(Reflect, FromReflect)]
+struct PlayerSetup {
+    name: String,
+    number: u8,
+    health: f64,
 }
 
 #[derive(Component, Default)]
@@ -34,7 +59,8 @@ struct MovementData {
     jump_speed: f32,
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Schematic)]
 struct Player;
 
 #[derive(Component)]
@@ -43,21 +69,21 @@ pub struct Name(String);
 #[derive(Component)]
 pub struct Health(f64);
 
-#[derive(Component)]
+#[derive(Component, FromReflect, Reflect)]
 enum AttackState {
     Warmup,
     Hit,
     Recovery,
 }
 
-#[derive(Component)]
+#[derive(Component, FromReflect, Reflect)]
 enum BlockState {
     Warmup,
     Counter,
     Block,
 }
 
-#[derive(Component)]
+#[derive(Component, FromReflect, Reflect)]
 enum PlayerState {
     Idle,
     Moving,
@@ -65,34 +91,53 @@ enum PlayerState {
     Blocking(BlockState),
 }
 
-#[derive(Component, PartialEq, Debug)]
+#[derive(Debug, Clone, Copy, FromReflect, Reflect)]
+enum Character {
+    Bridget,
+}
+
+#[derive(Component, PartialEq, Debug, Schematic, Reflect, FromReflect)]
 pub struct PlayerNumber(pub u8);
 
-fn add_players(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(PlayerBundle {
-        name: Name("Erin".to_string()),
-        hp: Health(10.0),
-        num: PlayerNumber(1),
-        _p: Player,
-        state: PlayerState::Idle,
-        // sprite: SpriteBundle {
-        //     texture: asset_server.load("characters/one.png"),
-        //     transform: Transform::from_xyz(10., 10., 0.),
-        //     ..default()
-        // },
-    });
-    commands.spawn(PlayerBundle {
-        name: Name("tqbed".to_string()),
-        hp: Health(10.0),
-        num: PlayerNumber(2),
-        _p: Player,
-        state: PlayerState::Idle,
-        // sprite: SpriteBundle {
-        //     texture: asset_server.load("characters/one.png"),
-        //     transform: Transform::from_xyz(100., 0., 0.),
-        //     ..default()
-        // },
-    });
+impl fmt::Display for Character {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Character::Bridget => write!(f, "Bridget"),
+        }
+    }
+}
+
+fn load(mut prototypes: PrototypesMut) {
+    prototypes.load("characters/Bridget.prototype.ron");
+}
+
+fn add_players(mut commands: ProtoCommands) {
+    commands.spawn(Character::Bridget.to_string());
+    info!("Spawned character!");
+    // commands.spawn(PlayerBundle {
+    //     name: Name("Erin".to_string()),
+    //     hp: Health(10.0),
+    //     num: PlayerNumber(1),
+    //     _p: Player,
+    //     state: PlayerState::Idle,
+    //     // sprite: SpriteBundle {
+    //     //     texture: asset_server.load("characters/one.png"),
+    //     //     transform: Transform::from_xyz(10., 10., 0.),
+    //     //     ..default()
+    //     // },
+    // });
+    // commands.spawn(PlayerBundle {
+    //     name: Name("tqbed".to_string()),
+    //     hp: Health(10.0),
+    //     num: PlayerNumber(2),
+    //     _p: Player,
+    //     state: PlayerState::Idle,
+    //     // sprite: SpriteBundle {
+    //     //     texture: asset_server.load("characters/one.png"),
+    //     //     transform: Transform::from_xyz(100., 0., 0.),
+    //     //     ..default()
+    //     // },
+    // });
 }
 
 fn greet_players(query: Query<&Name, With<Player>>) {

@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_proto::prelude::*;
 
 mod game;
 use game::GamePlugin;
@@ -43,5 +44,6 @@ fn main() {
         .add_plugin(GamePlugin)
         .add_plugin(UiPlugin)
         .add_plugin(SoundPlugin)
+        .add_plugin(ProtoPlugin::default())
         .run();
 }

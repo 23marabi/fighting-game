@@ -1,0 +1,9 @@
+(
+	name: "Bridget",
+	schematics: {
+		"game::player::Player": (
+			character: "Bridget",
+			health: 12.0,
+		),
+	},
+)
