@@ -8,7 +8,8 @@ pub struct AnimationPlugin;
 impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(load_spritesheets.in_schedule(OnEnter(AppState::InGame)))
-            .add_system(animate_players.in_set(OnUpdate(AppState::InGame)));
+            .add_system(animate_players.in_set(OnUpdate(AppState::InGame)))
+            .add_system(flip_players.in_set(OnUpdate(AppState::InGame)));
     }
 }
 
@@ -92,4 +93,35 @@ fn load_spritesheets(
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         PlayerNumber(2),
     ));
+}
+
+fn flip_players(mut query: Query<(&PlayerNumber, &Transform, &mut TextureAtlasSprite)>) {
+    let mut player1_location = Vec3::ZERO;
+    let mut player2_location = Vec3::ZERO;
+
+    for (num, trans, mut sprite) in query.iter_mut() {
+        match num {
+            PlayerNumber(1) => player1_location = trans.translation.clone(),
+            PlayerNumber(2) => player2_location = trans.translation.clone(),
+            _ => {}
+        }
+    }
+
+    if player1_location.x < player2_location.x {
+        for (num, trans, mut sprite) in query.iter_mut() {
+            match num {
+                PlayerNumber(1) => sprite.flip_x = false,
+                PlayerNumber(2) => sprite.flip_x = true,
+                _ => {}
+            }
+        }
+    } else {
+        for (num, trans, mut sprite) in query.iter_mut() {
+            match num {
+                PlayerNumber(1) => sprite.flip_x = true,
+                PlayerNumber(2) => sprite.flip_x = false,
+                _ => {}
+            }
+        }
+    }
 }
