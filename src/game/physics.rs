@@ -21,7 +21,7 @@ const GRAVITY: f32 = 9.8;
 struct JumpTimer(Timer);
 
 #[derive(Component, Default)]
-struct MovementData {
+pub struct MovementData {
     velocity: Vec2,
     acceleration: f32,
     friction: f32,
