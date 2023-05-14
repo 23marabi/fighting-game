@@ -2,14 +2,16 @@ use crate::game::player::PlayerNumber;
 use crate::AppState;
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::KinematicCharacterControllerOutput;
+use bevy_titan::SpriteSheetLoaderPlugin;
 
 pub struct AnimationPlugin;
 
 impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(load_spritesheets.in_schedule(OnEnter(AppState::InGame)))
-            .add_system(animate_players.in_set(OnUpdate(AppState::InGame)))
-            .add_system(flip_players.in_set(OnUpdate(AppState::InGame)));
+        app.add_plugin(SpriteSheetLoaderPlugin)
+            .add_system(load_spritesheets.in_schedule(OnEnter(AppState::InGame)))
+            .add_system(animate_players.in_set(OnUpdate(AppState::InGame)));
+        // .add_system(flip_players.in_set(OnUpdate(AppState::InGame)));
     }
 }
 
@@ -24,75 +26,55 @@ struct AnimationTimer(Timer);
 
 fn animate_players(
     time: Res<Time>,
+    texture_atlases: Res<Assets<TextureAtlas>>,
     mut query: Query<(
-        &AnimationIndices,
         &mut AnimationTimer,
         &mut TextureAtlasSprite,
-        &PlayerNumber,
-        &mut Transform,
+        &Handle<TextureAtlas>,
     )>,
-    outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
+    // mut sprites: Query<(&PlayerNumber, &mut Transform)>,
+    // outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
 ) {
-    for (indices, mut timer, mut sprite, player, mut trans) in &mut query {
+    for (mut timer, mut sprite, texture_atlas_handle) in &mut query {
         timer.tick(time.delta());
         if timer.just_finished() {
-            sprite.index = if sprite.index == indices.last {
-                indices.first
-            } else {
-                sprite.index + 1
-            };
+            let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
+            sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
         }
 
-        for (num, output) in outputs.iter() {
-            if num == player {
-                trans.translation.x += output.effective_translation.x;
-                trans.translation.y += output.effective_translation.y;
-            }
-        }
+        // for (player, mut trans) in sprites.iter_mut() {
+        //     for (num, output) in outputs.iter() {
+        //         if num == player {
+        //             trans.translation.x += output.effective_translation.x;
+        //             trans.translation.y += output.effective_translation.y;
+        //         }
+        //     }
+        // }
     }
 }
 
-fn load_spritesheets(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
+fn load_spritesheets(mut commands: Commands, asset_server: Res<AssetServer>) {
     /* Player One */
-    let texture_handle = asset_server.load("characters/test/idle.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(24.0, 24.0), 7, 1, None, None);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-    // Use only the subset of sprites in the sheet that make up the run animation
-    let animation_indices = AnimationIndices { first: 1, last: 6 };
+    let texture_atlas_handle = asset_server.load("characters/test/idle.titan");
     commands.spawn((
         SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle,
-            sprite: TextureAtlasSprite::new(animation_indices.first),
+            texture_atlas: texture_atlas_handle.clone(),
             transform: Transform::from_xyz(-464.002, -254.0, 0.0).with_scale(Vec3::splat(4.0)),
             ..default()
         },
-        animation_indices,
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
-        PlayerNumber(1),
     ));
 
     /* Player Two */
-    let texture_handle = asset_server.load("characters/test/idle.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(24.0, 24.0), 7, 1, None, None);
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
-    let animation_indices = AnimationIndices { first: 1, last: 6 };
-    commands.spawn((
-        SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle,
-            sprite: TextureAtlasSprite::new(animation_indices.first),
-            transform: Transform::from_xyz(464.002, -254.0, 0.0).with_scale(Vec3::splat(4.0)),
-            ..default()
-        },
-        animation_indices,
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
-        PlayerNumber(2),
-    ));
+    // commands.spawn((
+    //     SpriteSheetBundle {
+    //         texture_atlas: texture_atlas_handle.clone(),
+    //         transform: Transform::from_xyz(464.002, -254.0, 0.0).with_scale(Vec3::splat(4.0)),
+    //         ..default()
+    //     },
+    //     AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+    //     PlayerNumber(2),
+    // ));
 }
 
 fn flip_players(mut query: Query<(&PlayerNumber, &Transform, &mut TextureAtlasSprite)>) {

@@ -1004,6 +1004,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_titan"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ef5d1d2b1af8038a371fae537a2b635474231589e550a48a1f101da3f09cde6"
+dependencies = [
+ "bevy",
+ "ron",
+ "serde",
+]
+
+[[package]]
 name = "bevy_transform"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1714,6 +1725,7 @@ dependencies = [
  "bevy_kira_audio",
  "bevy_rapier2d",
  "bevy_splash_screen",
+ "bevy_titan",
  "bevy_tweening",
 ]
 

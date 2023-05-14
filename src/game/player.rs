@@ -21,8 +21,6 @@ struct PlayerBundle {
     _p: Player,
     state: PlayerState,
     num: PlayerNumber,
-    // #[bundle]
-    // sprite: SpriteBundle,
 }
 
 #[derive(Component, Default)]
@@ -75,11 +73,6 @@ fn add_players(mut commands: Commands, asset_server: Res<AssetServer>) {
         num: PlayerNumber(1),
         _p: Player,
         state: PlayerState::Idle,
-        // sprite: SpriteBundle {
-        //     texture: asset_server.load("characters/one.png"),
-        //     transform: Transform::from_xyz(10., 10., 0.),
-        //     ..default()
-        // },
     });
     commands.spawn(PlayerBundle {
         name: Name("tqbed".to_string()),
@@ -87,11 +80,6 @@ fn add_players(mut commands: Commands, asset_server: Res<AssetServer>) {
         num: PlayerNumber(2),
         _p: Player,
         state: PlayerState::Idle,
-        // sprite: SpriteBundle {
-        //     texture: asset_server.load("characters/one.png"),
-        //     transform: Transform::from_xyz(100., 0., 0.),
-        //     ..default()
-        // },
     });
 }
 
