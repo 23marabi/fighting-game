@@ -10,8 +10,8 @@ impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(SpriteSheetLoaderPlugin)
             .add_system(load_spritesheets.in_schedule(OnEnter(AppState::InGame)))
-            .add_system(animate_players.in_set(OnUpdate(AppState::InGame)));
-        // .add_system(flip_players.in_set(OnUpdate(AppState::InGame)));
+            .add_system(animate_players.in_set(OnUpdate(AppState::InGame)))
+            .add_system(flip_players.in_set(OnUpdate(AppState::InGame)));
     }
 }
 
@@ -31,25 +31,28 @@ fn animate_players(
         &mut AnimationTimer,
         &mut TextureAtlasSprite,
         &Handle<TextureAtlas>,
+        &PlayerNumber,
+        &mut Transform,
     )>,
     // mut sprites: Query<(&PlayerNumber, &mut Transform)>,
-    // outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
+    outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
 ) {
-    for (mut timer, mut sprite, texture_atlas_handle) in &mut query {
+    for (mut timer, mut sprite, texture_atlas_handle, num, mut trans) in &mut query {
         timer.tick(time.delta());
         if timer.just_finished() {
-            let texture_atlas = texture_atlases.get(texture_atlas_handle).unwrap();
+            let texture_atlas = match texture_atlases.get(texture_atlas_handle) {
+                Some(t) => t,
+                None => return,
+            };
             sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
         }
 
-        // for (player, mut trans) in sprites.iter_mut() {
-        //     for (num, output) in outputs.iter() {
-        //         if num == player {
-        //             trans.translation.x += output.effective_translation.x;
-        //             trans.translation.y += output.effective_translation.y;
-        //         }
-        //     }
-        // }
+        for (player, output) in outputs.iter() {
+            if num == player {
+                trans.translation.x += output.effective_translation.x;
+                trans.translation.y += output.effective_translation.y;
+            }
+        }
     }
 }
 
@@ -62,19 +65,21 @@ fn load_spritesheets(mut commands: Commands, asset_server: Res<AssetServer>) {
             transform: Transform::from_xyz(-464.002, -254.0, 0.0).with_scale(Vec3::splat(4.0)),
             ..default()
         },
+        PlayerNumber(1),
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
     ));
 
     /* Player Two */
-    // commands.spawn((
-    //     SpriteSheetBundle {
-    //         texture_atlas: texture_atlas_handle.clone(),
-    //         transform: Transform::from_xyz(464.002, -254.0, 0.0).with_scale(Vec3::splat(4.0)),
-    //         ..default()
-    //     },
-    //     AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
-    //     PlayerNumber(2),
-    // ));
+    let texture_atlas_handle = asset_server.load("characters/test/idle.titan");
+    commands.spawn((
+        SpriteSheetBundle {
+            texture_atlas: texture_atlas_handle.clone(),
+            transform: Transform::from_xyz(464.002, -254.0, 0.0).with_scale(Vec3::splat(4.0)),
+            ..default()
+        },
+        PlayerNumber(2),
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+    ));
 }
 
 fn flip_players(mut query: Query<(&PlayerNumber, &Transform, &mut TextureAtlasSprite)>) {
