@@ -9,8 +9,6 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Player>()
             .register_type::<PlayerNumber>()
-            .add_system(load_characters.in_schedule(OnEnter(AppState::MainMenu)))
-            // .add_system(check_player_state.in_set(OnUpdate(AppState::InGame)))
             .add_system(
                 add_players
                     .run_if(
@@ -102,22 +100,10 @@ enum PlayerState {
     Blocking(BlockState),
 }
 
-fn load_characters(mut prototypes: PrototypesMut) {
-    prototypes.load("characters/Player1.prototype.ron");
-    prototypes.load("characters/Player2.prototype.ron");
-    prototypes.load("characters/Test/Test.prototype.ron");
-}
-
 fn add_players(mut commands: ProtoCommands) {
     commands.spawn("Test").insert("Player2");
     commands.spawn("Test").insert("Player1");
     info!("Spawned characters!");
-}
-
-fn greet_players(query: Query<(&PlayerNumber, &Name)>) {
-    for (num, name) in &query {
-        println!("Welcome player #{}, {}!", num.0, name.0);
-    }
 }
 
 fn check_player_state(query: Query<(&Name, &Health, &PlayerState)>) {
