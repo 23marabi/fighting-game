@@ -1,0 +1,9 @@
+(
+	path: "characters/Test/idle.png",
+	tile_size: (
+		w: 24.0,
+		h: 24.0,
+	),
+	columns: 7,
+	rows: 1,
+)

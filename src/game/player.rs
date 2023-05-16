@@ -7,15 +7,24 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(greet_players.in_schedule(OnEnter(AppState::InGame)))
-            .register_type::<Player>()
-            .add_system(load.in_schedule(OnEnter(AppState::MainMenu)))
+        app.register_type::<Player>()
+            .register_type::<PlayerNumber>()
+            .add_system(load_characters.in_schedule(OnEnter(AppState::MainMenu)))
+            // .add_system(check_player_state.in_set(OnUpdate(AppState::InGame)))
             .add_system(
                 add_players
-                    .run_if(prototype_ready("Bridget"))
-                    .in_schedule(OnEnter(AppState::InGame))
-                    .before(greet_players),
+                    .run_if(
+                        prototype_ready("Test")
+                            .and_then(prototype_ready("Player1"))
+                            .and_then(prototype_ready("Player2")),
+                    )
+                    .in_schedule(OnEnter(AppState::InGame)),
             );
+        // .add_system(
+        //     check_player_state
+        //         .in_set(OnUpdate(AppState::InGame))
+        //         .after(add_players),
+        // );
     }
 }
 
@@ -28,7 +37,6 @@ impl Schematic for Player {
             .unwrap()
             .insert(Name(input.name.clone()))
             .insert(Health(input.health))
-            .insert(PlayerNumber(input.number))
             .insert(PlayerState::Idle);
     }
 
@@ -46,7 +54,6 @@ impl Schematic for Player {
 #[derive(Reflect, FromReflect)]
 struct PlayerSetup {
     name: String,
-    number: u8,
     health: f64,
 }
 
@@ -59,7 +66,7 @@ struct MovementData {
     jump_speed: f32,
 }
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Default)]
 #[reflect(Schematic)]
 struct Player;
 
@@ -68,6 +75,10 @@ pub struct Name(String);
 
 #[derive(Component)]
 pub struct Health(f64);
+
+#[derive(Component, PartialEq, Debug, Schematic, Reflect, FromReflect)]
+#[reflect(Schematic)]
+pub struct PlayerNumber(pub u8);
 
 #[derive(Component, FromReflect, Reflect)]
 enum AttackState {
@@ -91,62 +102,25 @@ enum PlayerState {
     Blocking(BlockState),
 }
 
-#[derive(Debug, Clone, Copy, FromReflect, Reflect)]
-enum Character {
-    Bridget,
-}
-
-#[derive(Component, PartialEq, Debug, Schematic, Reflect, FromReflect)]
-pub struct PlayerNumber(pub u8);
-
-impl fmt::Display for Character {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Character::Bridget => write!(f, "Bridget"),
-        }
-    }
-}
-
-fn load(mut prototypes: PrototypesMut) {
-    prototypes.load("characters/Bridget.prototype.ron");
+fn load_characters(mut prototypes: PrototypesMut) {
+    prototypes.load("characters/Player1.prototype.ron");
+    prototypes.load("characters/Player2.prototype.ron");
+    prototypes.load("characters/Test/Test.prototype.ron");
 }
 
 fn add_players(mut commands: ProtoCommands) {
-    commands.spawn(Character::Bridget.to_string());
-    info!("Spawned character!");
-    // commands.spawn(PlayerBundle {
-    //     name: Name("Erin".to_string()),
-    //     hp: Health(10.0),
-    //     num: PlayerNumber(1),
-    //     _p: Player,
-    //     state: PlayerState::Idle,
-    //     // sprite: SpriteBundle {
-    //     //     texture: asset_server.load("characters/one.png"),
-    //     //     transform: Transform::from_xyz(10., 10., 0.),
-    //     //     ..default()
-    //     // },
-    // });
-    // commands.spawn(PlayerBundle {
-    //     name: Name("tqbed".to_string()),
-    //     hp: Health(10.0),
-    //     num: PlayerNumber(2),
-    //     _p: Player,
-    //     state: PlayerState::Idle,
-    //     // sprite: SpriteBundle {
-    //     //     texture: asset_server.load("characters/one.png"),
-    //     //     transform: Transform::from_xyz(100., 0., 0.),
-    //     //     ..default()
-    //     // },
-    // });
+    commands.spawn("Test").insert("Player2");
+    commands.spawn("Test").insert("Player1");
+    info!("Spawned characters!");
 }
 
-fn greet_players(query: Query<&Name, With<Player>>) {
-    for name in &query {
-        println!("Welcome, {}!", name.0);
+fn greet_players(query: Query<(&PlayerNumber, &Name)>) {
+    for (num, name) in &query {
+        println!("Welcome player #{}, {}!", num.0, name.0);
     }
 }
 
-fn check_player_state(query: Query<(&Name, &Health, &PlayerState), With<Player>>) {
+fn check_player_state(query: Query<(&Name, &Health, &PlayerState)>) {
     for (name, health, state) in &query {
         match state {
             PlayerState::Idle => println!("{} ({}HP) is Idling", name.0, health.0),

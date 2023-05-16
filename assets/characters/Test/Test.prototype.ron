@@ -1,0 +1,9 @@
+(
+	name: "Test",
+	schematics: {
+		"fighting_game::game::player::Player": (
+			name: "Test",
+			health: 12.0,
+		),
+	},
+)

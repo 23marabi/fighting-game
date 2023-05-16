@@ -1,0 +1,6 @@
+(
+	name: "Player2",
+	schematics: {
+		"fighting_game::game::player::PlayerNumber": (2),
+	},
+)
