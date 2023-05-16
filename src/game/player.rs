@@ -3,21 +3,15 @@ use bevy::prelude::*;
 use bevy_proto::prelude::*;
 use std::fmt;
 
+use crate::game::character::CharacterMap;
+
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Player>()
             .register_type::<PlayerNumber>()
-            .add_system(
-                add_players
-                    .run_if(
-                        prototype_ready("Test")
-                            .and_then(prototype_ready("Player1"))
-                            .and_then(prototype_ready("Player2")),
-                    )
-                    .in_schedule(OnEnter(AppState::InGame)),
-            );
+            .add_system(add_players.in_schedule(OnEnter(AppState::InGame)));
         // .add_system(
         //     check_player_state
         //         .in_set(OnUpdate(AppState::InGame))
@@ -100,9 +94,13 @@ enum PlayerState {
     Blocking(BlockState),
 }
 
-fn add_players(mut commands: ProtoCommands) {
-    commands.spawn("Test").insert("Player2");
-    commands.spawn("Test").insert("Player1");
+fn add_players(mut commands: ProtoCommands, characters: Res<CharacterMap>) {
+    commands
+        .spawn(characters.0.get("Test").unwrap().get_name())
+        .insert("Player2");
+    commands
+        .spawn(characters.0.get("Test").unwrap().get_name())
+        .insert("Player1");
     info!("Spawned characters!");
 }
 

@@ -9,7 +9,8 @@ pub struct CharacterPlugin;
 
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(load_characters);
+        app.init_resource::<CharacterMap>()
+            .add_startup_system(load_characters);
     }
 }
 
@@ -21,11 +22,11 @@ pub struct Character {
 }
 
 impl Character {
-    fn get_name(&self) -> &String {
+    pub fn get_name(&self) -> &String {
         return &self.name;
     }
 
-    fn get_path(&self) -> &Option<PathBuf> {
+    pub fn get_path(&self) -> &Option<PathBuf> {
         return &self.path;
     }
 
@@ -47,7 +48,7 @@ impl Character {
 }
 
 #[derive(Resource, Default)]
-pub struct CharacterMap(HashMap<String, Character>, Vec<u8>);
+pub struct CharacterMap(pub HashMap<String, Character>, Vec<u8>);
 
 impl CharacterMap {
     fn index(&mut self) {
@@ -85,13 +86,13 @@ impl CharacterMap {
     }
 }
 
-fn load_characters(mut prototypes: PrototypesMut) {
-    let mut map = CharacterMap::default();
+fn load_characters(mut prototypes: PrototypesMut, mut map: ResMut<CharacterMap>) {
     map.index();
 
-    for (name, char) in map.0 {
+    for (name, char) in &map.0 {
         let path = char
             .path
+            .clone()
             .unwrap()
             .clone()
             .strip_prefix("./assets/")
@@ -99,10 +100,9 @@ fn load_characters(mut prototypes: PrototypesMut) {
             .to_string_lossy()
             .into_owned();
 
-        info!("{}", &path);
         prototypes.load(path);
     }
-    // prototypes.load("characters/Player1.prototype.ron");
-    // prototypes.load("characters/Player2.prototype.ron");
-    // prototypes.load("characters/Test/Test.prototype.ron");
+
+    prototypes.load("characters/Player1.prototype.ron");
+    prototypes.load("characters/Player2.prototype.ron");
 }

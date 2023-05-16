@@ -4,6 +4,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::KinematicCharacterControllerOutput;
 use bevy_titan::SpriteSheetLoaderPlugin;
 
+use crate::game::character::CharacterMap;
+
 pub struct AnimationPlugin;
 
 impl Plugin for AnimationPlugin {
@@ -50,9 +52,29 @@ fn animate_players(
     }
 }
 
-fn load_spritesheets(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn load_spritesheets(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    map: ResMut<CharacterMap>,
+) {
     /* Player One */
-    let texture_atlas_handle = asset_server.load("characters/Test/idle.titan");
+    let mut path = map
+        .0
+        .get("Test")
+        .unwrap()
+        .get_path()
+        .as_ref()
+        .unwrap()
+        .strip_prefix("./assets/")
+        .unwrap()
+        .to_path_buf();
+
+    path.pop();
+    path.push("idle.titan");
+    let path = path.to_string_lossy().into_owned();
+
+    let texture_atlas_handle = asset_server.load(path);
+
     commands.spawn((
         SpriteSheetBundle {
             texture_atlas: texture_atlas_handle.clone(),
@@ -64,7 +86,6 @@ fn load_spritesheets(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 
     /* Player Two */
-    let texture_atlas_handle = asset_server.load("characters/Test/idle.titan");
     commands.spawn((
         SpriteSheetBundle {
             texture_atlas: texture_atlas_handle.clone(),
