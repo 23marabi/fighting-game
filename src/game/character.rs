@@ -1,17 +1,108 @@
 use crate::AppState;
 use bevy::prelude::*;
 use bevy_proto::prelude::*;
+use ignore::{types::TypesBuilder, WalkBuilder};
+use std::collections::hash_map::HashMap;
+use std::path::PathBuf;
 
 pub struct CharacterPlugin;
 
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(load_characters.in_schedule(OnEnter(AppState::MainMenu)));
+        app.add_startup_system(load_characters);
+    }
+}
+
+#[derive(Resource, Default, Debug)]
+pub struct Character {
+    name: String,
+    path: Option<PathBuf>,
+    sprite: Option<String>,
+}
+
+impl Character {
+    fn get_name(&self) -> &String {
+        return &self.name;
+    }
+
+    fn get_path(&self) -> &Option<PathBuf> {
+        return &self.path;
+    }
+
+    fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    fn set_path(&mut self, path: PathBuf) {
+        self.path = Some(path);
+    }
+
+    fn new(name: &str, path: Option<PathBuf>) -> Self {
+        return Self {
+            name: name.to_string(),
+            path,
+            sprite: None,
+        };
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct CharacterMap(HashMap<String, Character>, Vec<u8>);
+
+impl CharacterMap {
+    fn index(&mut self) {
+        let mut builder = TypesBuilder::new();
+        builder.add("proto", "*.prototype.ron");
+        builder.select("proto");
+        let matcher = builder.build().unwrap();
+
+        let walk = WalkBuilder::new("./assets/characters/")
+            .types(matcher)
+            .build();
+
+        for res in walk {
+            match res {
+                Ok(entry) => {
+                    if entry.depth() == 2 {
+                        let name = entry
+                            .file_name()
+                            .to_str()
+                            .unwrap()
+                            .split_at(entry.file_name().len() - 14)
+                            .0;
+                        info!("Found character {}", name);
+                        let new_char = Character::new(&name, Some(entry.clone().into_path()));
+                        self.0.insert(name.to_string(), new_char);
+                    }
+                }
+                Err(err) => error!("ERROR: {}", err),
+            }
+        }
+
+        for (name, char) in &self.0 {
+            println!("{}: {:?}", name, char);
+        }
     }
 }
 
 fn load_characters(mut prototypes: PrototypesMut) {
-    prototypes.load("characters/Player1.prototype.ron");
-    prototypes.load("characters/Player2.prototype.ron");
-    prototypes.load("characters/Test/Test.prototype.ron");
+    let mut map = CharacterMap::default();
+    map.index();
+
+    for (name, char) in map.0 {
+        let path = char
+            .path
+            .unwrap()
+            .clone()
+            .strip_prefix("./assets/")
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
+
+        info!("{}", &path);
+        prototypes.load(path);
+    }
+    // prototypes.load("characters/Player1.prototype.ron");
+    // prototypes.load("characters/Player2.prototype.ron");
+    // prototypes.load("characters/Test/Test.prototype.ron");
 }
