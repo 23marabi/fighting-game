@@ -78,7 +78,7 @@ fn load_spritesheets(
     commands.spawn((
         SpriteSheetBundle {
             texture_atlas: texture_atlas_handle.clone(),
-            transform: Transform::from_xyz(-500.0, 0.0, 0.0).with_scale(Vec3::splat(8.0)),
+            transform: Transform::from_xyz(-800.0, -420.0, 0.0).with_scale(Vec3::splat(8.0)),
             ..default()
         },
         PlayerNumber(1),
@@ -89,7 +89,7 @@ fn load_spritesheets(
     commands.spawn((
         SpriteSheetBundle {
             texture_atlas: texture_atlas_handle.clone(),
-            transform: Transform::from_xyz(500.0, 0.0, 0.0).with_scale(Vec3::splat(8.0)),
+            transform: Transform::from_xyz(800.0, -420.0, 0.0).with_scale(Vec3::splat(8.0)),
             ..default()
         },
         PlayerNumber(2),

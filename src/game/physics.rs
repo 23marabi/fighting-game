@@ -20,6 +20,9 @@ impl Plugin for PhysicsPlugin {
 struct JumpTimer(Timer);
 
 #[derive(Component)]
+struct Countdown(Timer);
+
+#[derive(Component)]
 struct Direction(Vec2);
 
 #[derive(Component)]
@@ -88,6 +91,8 @@ fn setup_physics(mut commands: Commands, s: Res<Settings>) {
         PlayerNumber(2),
         JumpTimer(Timer::from_seconds(0.35, TimerMode::Once)),
     ));
+
+    commands.spawn(Countdown(Timer::from_seconds(0.5, TimerMode::Once)));
 }
 
 fn update_physics(
@@ -101,7 +106,16 @@ fn update_physics(
     )>,
     outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
     keyboard: Res<Input<KeyCode>>,
+    mut count: Query<&mut Countdown>,
 ) {
+    let mut m_move = false;
+    count.for_each_mut(|mut timer| {
+        timer.0.tick(time.delta());
+        if timer.0.finished() {
+            m_move = true;
+        }
+    });
+
     let mut p1_to_move = Vec2::ZERO;
     let mut p2_to_move = Vec2::ZERO;
 
@@ -137,7 +151,7 @@ fn update_physics(
     }
 
     for (num, mut movement, mut controller) in controllers.iter_mut() {
-        if num == &PlayerNumber(1) {
+        if num == &PlayerNumber(1) && m_move {
             let mut on_ground = false;
             for (o_num, output) in outputs.iter() {
                 if o_num == &PlayerNumber(1) {
@@ -175,7 +189,7 @@ fn update_physics(
                 None => Vec2::ZERO,
             };
             controller.translation = Some(old_translation + movement.velocity);
-        } else if num == &PlayerNumber(2) {
+        } else if num == &PlayerNumber(2) && m_move {
             let mut on_ground = false;
             for (o_num, output) in outputs.iter() {
                 if o_num == &PlayerNumber(2) {
