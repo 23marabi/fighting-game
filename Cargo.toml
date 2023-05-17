@@ -31,6 +31,9 @@ bevy_proto = "0.9.0"
 bevy_titan = "0.2.0"
 bevy-discord-presence = "0.4.1"
 ignore = "0.4.20"
+config = { version = "0.13.3", default-features = false, features = [ "ron" ] }
+serde_derive = "1.0.163"
+serde = "1.0.163"
 
 [patch.crates-io]
 bevy_tweening = { git = "https://github.com/sibsibsib/bevy_tweening", branch = "mirrored_repeat_fix" }

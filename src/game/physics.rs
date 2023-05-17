@@ -3,6 +3,7 @@ use bevy::{input::gamepad::GamepadEvent, prelude::*};
 use bevy_rapier2d::prelude::*;
 
 use crate::game::player::PlayerNumber;
+use crate::settings::Settings;
 
 pub struct PhysicsPlugin;
 
@@ -43,21 +44,50 @@ fn gamepad_ordered_events(mut gamepad_events: EventReader<GamepadEvent>) {
     }
 }
 
-fn setup_physics(mut commands: Commands) {
+fn setup_physics(mut commands: Commands, s: Res<Settings>) {
     /* Create the ground & ceiling */
     commands
-        .spawn(Collider::cuboid(575.0, 20.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, -325.0, 0.0)));
+        .spawn(Collider::cuboid(
+            s.physics.ground.dimensions.0,
+            s.physics.ground.dimensions.1,
+        ))
+        .insert(TransformBundle::from(Transform::from_xyz(
+            s.physics.ground.position.0,
+            s.physics.ground.position.1,
+            0.0,
+        )));
     commands
-        .spawn(Collider::cuboid(575.0, 20.0))
-        .insert(TransformBundle::from(Transform::from_xyz(0.0, 325.0, 0.0)));
+        .spawn(Collider::cuboid(
+            s.physics.ceiling.dimensions.0,
+            s.physics.ceiling.dimensions.1,
+        ))
+        .insert(TransformBundle::from(Transform::from_xyz(
+            s.physics.ceiling.position.0,
+            s.physics.ceiling.position.1,
+            0.0,
+        )));
+
     /* Create the walls */
     commands
-        .spawn(Collider::cuboid(20.0, 325.0))
-        .insert(TransformBundle::from(Transform::from_xyz(-575.0, 0.0, 0.0)));
+        .spawn(Collider::cuboid(
+            s.physics.left_wall.dimensions.0,
+            s.physics.left_wall.dimensions.1,
+        ))
+        .insert(TransformBundle::from(Transform::from_xyz(
+            s.physics.left_wall.position.0,
+            s.physics.left_wall.position.1,
+            0.0,
+        )));
     commands
-        .spawn(Collider::cuboid(20.0, 325.0))
-        .insert(TransformBundle::from(Transform::from_xyz(575.0, 0.0, 0.0)));
+        .spawn(Collider::cuboid(
+            s.physics.right_wall.dimensions.0,
+            s.physics.right_wall.dimensions.1,
+        ))
+        .insert(TransformBundle::from(Transform::from_xyz(
+            s.physics.right_wall.position.0,
+            s.physics.right_wall.position.1,
+            0.0,
+        )));
 
     /* Create the Players */
     commands

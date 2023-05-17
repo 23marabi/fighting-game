@@ -1,0 +1,29 @@
+(
+	window: (
+		resolution: (1920.0, 1080.0),
+		resizable: false,
+	),
+	framerate: 60.0,
+	background: (
+		image: "background.png",
+		scale: (1.0, 1.0, 2.0),
+	),
+	physics: (
+		ground: (
+			position: (0.0, -325.0),
+			dimensions: (575.0, 20.0),
+		),
+		ceiling: (
+			position: (0.0, 325.0),
+			dimensions: (575.0, 20.0),
+		),
+		left_wall: (
+			position: (-575.0, 0.0),
+			dimensions: (20.0, 325.0),
+		),
+		right_wall: (
+			position: (525.0, 325.0),
+			dimensions: (20.0, 325.0),
+		),
+	),
+)

@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 use bevy_proto::prelude::*;
+use config::Config;
+use std::collections::HashMap;
+use std::process::exit;
 
 mod game;
 use game::GamePlugin;
@@ -18,15 +21,21 @@ pub enum AppState {
     Paused,
 }
 
+mod settings;
+use settings::Settings;
+
 fn main() {
+    let settings = Settings::new().unwrap();
+    println!("{:?}", settings);
+
     let primary_window = Window {
         title: "Fighting Game".to_string(),
-        resolution: (1920.0, 1080.0).into(),
-        resizable: false,
+        resolution: settings.window.resolution.into(),
+        resizable: settings.window.resizable,
         ..Default::default()
     };
 
-    App::new()
+    let app = App::new()
         .add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {
@@ -40,6 +49,7 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
         )
+        .insert_resource(settings)
         .add_state::<AppState>()
         .add_plugin(GamePlugin)
         .add_plugin(UiPlugin)

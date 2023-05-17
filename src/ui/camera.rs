@@ -1,3 +1,4 @@
+use crate::settings::Settings;
 use crate::AppState;
 use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::prelude::*;
@@ -15,23 +16,28 @@ impl Plugin for CameraPlugin {
 }
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera2dBundle::default(),
-        BloomSettings {
-            intensity: 0.3,
-            ..default()
-        },
-    ));
+    commands.spawn(Camera2dBundle::default());
 }
 
-fn fix_framerate(mut settings: ResMut<bevy_framepace::FramepaceSettings>) {
-    settings.limiter = Limiter::from_framerate(60.0);
+fn fix_framerate(
+    mut frame_settings: ResMut<bevy_framepace::FramepaceSettings>,
+    settings: Res<Settings>,
+) {
+    frame_settings.limiter = Limiter::from_framerate(settings.framerate);
 }
 
-fn draw_background(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn draw_background(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    settings: Res<Settings>,
+) {
     commands.spawn(SpriteBundle {
-        transform: Transform::from_scale(Vec3::new(1.0, 1.0, 2.0)),
-        texture: asset_server.load("background.png"),
+        transform: Transform::from_scale(Vec3::new(
+            settings.background.scale.0,
+            settings.background.scale.1,
+            settings.background.scale.2,
+        )),
+        texture: asset_server.load(settings.background.image.clone()),
         ..default()
     });
 }

@@ -278,6 +278,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ecc7ab41815b3c653ccd2978ec3255c81349336702dfdf62ee6f7069b12a3aae"
 
 [[package]]
+name = "async-trait"
+version = "0.1.68"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9ccdd8f2a161be9bd5c023df56f1b2a0bd1d83872ae53b71a84a12c9bf6e842"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.16",
+]
+
+[[package]]
 name = "atomic-arena"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -814,7 +825,7 @@ dependencies = [
  "bevy",
  "bevy_proto_backend",
  "path-clean",
- "ron",
+ "ron 0.8.0",
  "serde",
  "thiserror",
 ]
@@ -976,7 +987,7 @@ dependencies = [
  "bevy_render",
  "bevy_transform",
  "bevy_utils",
- "ron",
+ "ron 0.8.0",
  "serde",
  "thiserror",
  "uuid",
@@ -1076,7 +1087,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2ef5d1d2b1af8038a371fae537a2b635474231589e550a48a1f101da3f09cde6"
 dependencies = [
  "bevy",
- "ron",
+ "ron 0.8.0",
  "serde",
 ]
 
@@ -1424,6 +1435,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62ec6771ecfa0762d24683ee5a32ad78487a3d3afdc0fb8cae19d2c5deb50b7c"
 dependencies = [
  "crossbeam-utils",
+]
+
+[[package]]
+name = "config"
+version = "0.13.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d379af7f68bfc21714c6c7dea883544201741d2ce8274bb12fa54f89507f52a7"
+dependencies = [
+ "async-trait",
+ "lazy_static",
+ "nom",
+ "pathdiff",
+ "ron 0.7.1",
+ "serde",
 ]
 
 [[package]]
@@ -1851,7 +1876,10 @@ dependencies = [
  "bevy_splash_screen",
  "bevy_titan",
  "bevy_tweening",
+ "config",
  "ignore",
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]
@@ -3121,6 +3149,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17359afc20d7ab31fdb42bb844c8b3bb1dabd7dcf7e68428492da7f16966fcef"
 
 [[package]]
+name = "pathdiff"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd"
+
+[[package]]
 name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3357,6 +3391,17 @@ checksum = "bdf1d4dea18dff2e9eb6dca123724f8b60ef44ad74a9ad283cdfe025df7e73fa"
 dependencies = [
  "cpal",
  "lewton",
+]
+
+[[package]]
+name = "ron"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88073939a61e5b7680558e6be56b419e208420c2adb92be54921fa6b72283f1a"
+dependencies = [
+ "base64",
+ "bitflags",
+ "serde",
 ]
 
 [[package]]

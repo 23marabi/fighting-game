@@ -5,11 +5,12 @@ release:
 	cargo build --release
 	strip target/release/fighting-game
 	upx --best --lzma target/release/fighting-game
-	mkdir packed
-	cp -r assets packed/
-	cp target/release/fighting-game packed/
-	rm -rf packed
-	ouch compress packed fighting-game.tar.gz
+	mkdir fighting-game
+	cp -r assets fighting-game/
+	cp config.ron fighting-game/
+	cp target/release/fighting-game fighting-game/
+	ouch compress fighting-game fighting-game.tar.gz
+	rm -rf fighting-game
 
 perf:
 	cargo clean
