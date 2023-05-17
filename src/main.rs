@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_proto::prelude::*;
 use clap::Parser;
 use config::Config;
+use human_panic::setup_panic;
 use std::collections::HashMap;
 use std::process::exit;
 
@@ -38,6 +39,7 @@ mod settings;
 use settings::Settings;
 
 fn main() {
+    setup_panic!();
     let args = Args::parse();
 
     let settings = Settings::new().unwrap();
