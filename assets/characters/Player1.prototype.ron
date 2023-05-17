@@ -5,8 +5,8 @@
 		"bevy_proto::custom::TransformBundle": (
 			local: Transform(
 				translation: (
-					x: -464.002,
-					y: -254.0,
+					x: -500.0,
+					y: 0.0,
 					z: 0.0,
 				),
 			),

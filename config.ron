@@ -10,20 +10,20 @@
 	),
 	physics: (
 		ground: (
-			position: (0.0, -325.0),
-			dimensions: (575.0, 20.0),
+			position: (0.0, -550.0),
+			dimensions: (950.0, 20.0),
 		),
 		ceiling: (
-			position: (0.0, 325.0),
-			dimensions: (575.0, 20.0),
+			position: (0.0, 550.0),
+			dimensions: (950.0, 20.0),
 		),
 		left_wall: (
-			position: (-575.0, 0.0),
-			dimensions: (20.0, 325.0),
+			position: (-950.0, 0.0),
+			dimensions: (20.0, 1000.0),
 		),
 		right_wall: (
-			position: (525.0, 0.0),
-			dimensions: (20.0, 325.0),
+			position: (950.0, 0.0),
+			dimensions: (20.0, 1000.0),
 		),
 	),
 )

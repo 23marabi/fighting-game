@@ -9,12 +9,12 @@
 					x: 0.0, 
 					y: 0.0
 				),
-				acceleration: 5.0,
+				acceleration: 8.0,
 				friction: 0.9,
-				max_speed: 8.0,
+				max_speed: 10.0,
 				jump_speed: 25.0,
 			),
-			collider: 20.0,
+			collider: 50.0,
 		),
 	},
 )
