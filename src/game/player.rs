@@ -1,6 +1,7 @@
 use crate::AppState;
 use bevy::prelude::*;
 use bevy_proto::prelude::*;
+use bevy_rapier2d::prelude::*;
 use std::fmt;
 
 use crate::game::character::CharacterMap;
@@ -11,6 +12,9 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Player>()
             .register_type::<PlayerNumber>()
+            .register_type::<MovementData>()
+            .register_type::<bevy_proto::custom::TransformBundle>()
+            .register_type::<Transform>()
             .add_system(add_players.in_schedule(OnEnter(AppState::InGame)));
         // .add_system(
         //     check_player_state
@@ -29,6 +33,16 @@ impl Schematic for Player {
             .unwrap()
             .insert(Name(input.name.clone()))
             .insert(Health(input.health))
+            .insert(KinematicCharacterController::default())
+            .insert(Collider::capsule(
+                Vec2::new(0.0, -input.collider),
+                Vec2::new(0.0, input.collider),
+                input.collider,
+            ))
+            // .insert(TransformBundle::from(Transform::from_xyz(
+            //     -464.002, -254.0, 0.0,
+            // )))
+            .insert(input.physics)
             .insert(PlayerState::Idle);
     }
 
@@ -38,6 +52,9 @@ impl Schematic for Player {
             .unwrap()
             .remove::<Name>()
             .remove::<Health>()
+            .remove::<KinematicCharacterController>()
+            .remove::<Collider>()
+            .remove::<MovementData>()
             .remove::<PlayerNumber>()
             .remove::<PlayerState>();
     }
@@ -47,15 +64,18 @@ impl Schematic for Player {
 struct PlayerSetup {
     name: String,
     health: f64,
+    physics: MovementData,
+    collider: f32,
 }
 
-#[derive(Component, Default)]
-struct MovementData {
-    velocity: Vec2,
-    acceleration: f32,
-    friction: f32,
-    max_speed: f32,
-    jump_speed: f32,
+#[derive(Component, Reflect, Default, FromReflect, Schematic, Copy, Clone)]
+#[reflect(Schematic)]
+pub struct MovementData {
+    pub velocity: Vec2,
+    pub acceleration: f32,
+    pub friction: f32,
+    pub max_speed: f32,
+    pub jump_speed: f32,
 }
 
 #[derive(Component, Reflect, Default)]
@@ -97,11 +117,10 @@ enum PlayerState {
 fn add_players(mut commands: ProtoCommands, characters: Res<CharacterMap>) {
     commands
         .spawn(characters.0.get("Test").unwrap().get_name())
-        .insert("Player2");
+        .insert("Player1");
     commands
         .spawn(characters.0.get("Test").unwrap().get_name())
-        .insert("Player1");
-    info!("Spawned characters!");
+        .insert("Player2");
 }
 
 fn check_player_state(query: Query<(&Name, &Health, &PlayerState)>) {

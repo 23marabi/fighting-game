@@ -2,5 +2,14 @@
 	name: "Player1",
 	schematics: {
 		"fighting_game::game::player::PlayerNumber": (1),
+		"bevy_proto::custom::TransformBundle": (
+			local: Transform(
+				translation: (
+					x: -464.002,
+					y: -254.0,
+					z: 0.0,
+				),
+			),
+		),
 	},
 )

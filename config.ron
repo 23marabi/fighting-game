@@ -22,7 +22,7 @@
 			dimensions: (20.0, 325.0),
 		),
 		right_wall: (
-			position: (525.0, 325.0),
+			position: (525.0, 0.0),
 			dimensions: (20.0, 325.0),
 		),
 	),
