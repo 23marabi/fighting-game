@@ -34,6 +34,7 @@ ignore = "0.4.20"
 config = { version = "0.13.3", default-features = false, features = [ "ron" ] }
 serde_derive = "1.0.163"
 serde = "1.0.163"
+clap = { version = "4.2.7", features = [ "unicode", "derive" ] }
 
 [patch.crates-io]
 bevy_tweening = { git = "https://github.com/sibsibsib/bevy_tweening", branch = "mirrored_repeat_fix" }

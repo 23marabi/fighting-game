@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_proto::prelude::*;
+use clap::Parser;
 use config::Config;
 use std::collections::HashMap;
 use std::process::exit;
@@ -21,10 +22,24 @@ pub enum AppState {
     Paused,
 }
 
+/// A fun and over-the-top fighting game.
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    // IP Address to listen on
+    #[arg(long, default_value = "localhost")]
+    ip: String,
+
+    #[arg(long, default_value_t = 1337)]
+    port: u16,
+}
+
 mod settings;
 use settings::Settings;
 
 fn main() {
+    let args = Args::parse();
+
     let settings = Settings::new().unwrap();
     println!("{:?}", settings);
 
