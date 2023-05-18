@@ -25,7 +25,7 @@ pub fn title_splashscreen() -> SplashScreen {
                         TextSection::new(
                             "Fighting Game\n",
                             TextStyle {
-                                font_size: 40.,
+                                font_size: 100.,
                                 color: Color::WHITE,
                                 ..default()
                             },
@@ -41,17 +41,17 @@ pub fn title_splashscreen() -> SplashScreen {
                         TextSection::new(
                             "Erin, tqbed, Alyx",
                             TextStyle {
-                                font_size: 32.,
+                                font_size: 50.,
                                 color: Color::WHITE,
                                 ..default()
                             },
                         ),
                     ])
                     .with_alignment(TextAlignment::Center),
-                    "fonts/Atkinson-Bold.ttf".to_string(),
+                    "fonts/Kenney Pixel Square.ttf".to_string(),
                 ),
                 tint: Color::WHITE,
-                size: Size::new(Val::Percent(25.), Val::Px(150.)),
+                size: Size::new(Val::Percent(33.3), Val::Percent(50.)),
                 ease_function: EaseFunction::QuarticInOut.into(),
                 duration: Duration::from_secs_f32(3.),
                 is_static: false,

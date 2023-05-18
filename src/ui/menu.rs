@@ -51,7 +51,7 @@ pub fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                     parent.spawn(TextBundle::from_section(
                         "Play",
                         TextStyle {
-                            font: asset_server.load("fonts/Atkinson-Bold.ttf"),
+                            font: asset_server.load("fonts/Kenney Pixel Square.ttf"),
                             font_size: 40.0,
                             color: Color::rgb(0.9, 0.9, 0.9),
                         },
