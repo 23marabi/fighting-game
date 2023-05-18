@@ -15,9 +15,6 @@ debug = true
 lto = true
 codegen-units = 1
 
-[target.x86_64-unknown-linux-gnu]
-rustflags = ["-Clink-arg=-fuse-ld=lld", "Clink-arg=-Wl,--no-rosegment"]
-
 [dependencies]
 bevy = { version = "0.10.1", default-features = false }
 bevy_framepace = "0.12.1"
@@ -36,6 +33,7 @@ serde_derive = "1.0.163"
 serde = "1.0.163"
 clap = { version = "4.2.7", features = [ "unicode", "derive" ] }
 human-panic = "1.1.4"
+ahash = "0.8.3"
 
 [patch.crates-io]
 bevy_tweening = { git = "https://github.com/sibsibsib/bevy_tweening", branch = "mirrored_repeat_fix" }

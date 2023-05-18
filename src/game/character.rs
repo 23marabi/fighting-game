@@ -1,8 +1,8 @@
 use crate::AppState;
+use ahash::AHashMap;
 use bevy::prelude::*;
 use bevy_proto::prelude::*;
 use ignore::{types::TypesBuilder, WalkBuilder};
-use std::collections::hash_map::HashMap;
 use std::path::PathBuf;
 
 pub struct CharacterPlugin;
@@ -48,7 +48,7 @@ impl Character {
 }
 
 #[derive(Resource, Default)]
-pub struct CharacterMap(pub HashMap<String, Character>, Vec<u8>);
+pub struct CharacterMap(pub AHashMap<String, Character>, Vec<u8>);
 
 impl CharacterMap {
     fn index(&mut self) {
