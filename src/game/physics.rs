@@ -136,6 +136,16 @@ fn update_physics(
         }
     }
 
+    let mut p1_j_accel = 0.0;
+    let mut p2_j_accel = 0.0;
+    for (t_num, timer) in timer_query.iter() {
+        match t_num {
+            PlayerNumber(1) => p1_j_accel = timer.0.percent() * time.delta_seconds() + 1.0,
+            PlayerNumber(2) => p2_j_accel = timer.0.percent() * time.delta_seconds() + 1.0,
+            _ => {}
+        }
+    }
+
     if keyboard.pressed(KeyCode::A) {
         p1_to_move.x -= 1.0;
     }
@@ -174,7 +184,7 @@ fn update_physics(
                 movement.velocity = movement.velocity.lerp(
                     Vec2::new(
                         p1_to_move.x * movement.max_speed,
-                        p1_to_move.y * movement.jump_speed,
+                        p1_to_move.y * movement.jump_speed * p1_j_accel,
                     ),
                     movement.acceleration * time.delta_seconds(),
                 );
@@ -212,7 +222,7 @@ fn update_physics(
                 movement.velocity = movement.velocity.lerp(
                     Vec2::new(
                         p2_to_move.x * movement.max_speed,
-                        p2_to_move.y * movement.jump_speed,
+                        p2_to_move.y * movement.jump_speed * p2_j_accel,
                     ),
                     movement.acceleration * time.delta_seconds(),
                 );
