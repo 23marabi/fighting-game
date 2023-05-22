@@ -1,7 +1,7 @@
 use crate::settings::Settings;
 use crate::AppState;
 use bevy::core_pipeline::bloom::BloomSettings;
-use bevy::prelude::*;
+use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_framepace::Limiter;
 
 pub struct CameraPlugin;
@@ -16,7 +16,12 @@ impl Plugin for CameraPlugin {
 }
 
 fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    let mut camera_bundle = Camera2dBundle::default();
+    camera_bundle.projection.scaling_mode = ScalingMode::Fixed {
+        width: 1920.,
+        height: 1080.,
+    };
+    commands.spawn(camera_bundle);
 }
 
 fn fix_framerate(
