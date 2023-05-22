@@ -5,14 +5,22 @@ use bevy_rapier2d::prelude::*;
 use crate::game::player::{MovementData, PlayerNumber};
 use crate::settings::Settings;
 
+const INPUT_UP: u8 = 1 << 0;
+const INPUT_LEFT: u8 = 1 << 2;
+const INPUT_RIGHT: u8 = 1 << 3;
+
 pub struct PhysicsPlugin;
 
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
+        GGRSPlugin::<GgrsConfig>::new()
+        .with_input_system(input)
+        .build(&mut app);
+
         app.add_plugin(RapierDebugRenderPlugin::default())
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-            .add_system(setup_physics.in_schedule(OnEnter(AppState::InGame)))
-            .add_system(update_physics.in_set(OnUpdate(AppState::InGame)));
+            .add_system(setup.in_schedule(OnEnter(AppState::InGame)))
+            .add_systems((move_player.in_schedule(GGRSSchedule), wait_for_players));
     }
 }
 
@@ -95,17 +103,26 @@ fn setup_physics(mut commands: Commands, s: Res<Settings>) {
     commands.spawn(Countdown(Timer::from_seconds(0.5, TimerMode::Once)));
 }
 
-fn update_physics(
-    mut commands: Commands,
+fn input(_: In<ggrs::PlayerHandle>, keys: Res<Input<KeyCode>>) -> u8 {
+    let mut input = 0u8;
+
+    if keys.any_pressed([KeyCode::Up, KeyCode::W]) {
+        input |= INPUT_UP;
+    }
+    if keys.any_pressed([KeyCode::Left, KeyCode::A]) {
+        input |= INPUT_LEFT
+    }
+    if keys.any_pressed([KeyCode::Right, KeyCode::D]) {
+        input |= INPUT_RIGHT;
+    }
+
+    input
+}
+
+fn move_player(
+    inputs: Res<PlayerInputs<GgrsConfig>>,
     time: Res<Time>,
-    mut timer_query: Query<(&PlayerNumber, &mut JumpTimer)>,
-    mut controllers: Query<(
-        &PlayerNumber,
-        &mut MovementData,
-        &mut KinematicCharacterController,
-    )>,
-    outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
-    keyboard: Res<Input<KeyCode>>,
+    mut player_query: Query<&PlayerNumber, &mut MovementData, &mut JumpTimer>,
     mut count: Query<&mut Countdown>,
 ) {
     let mut m_move = false;
@@ -116,40 +133,48 @@ fn update_physics(
         }
     });
 
-    let mut p1_to_move = Vec2::ZERO;
-    let mut p2_to_move = Vec2::ZERO;
-
-    for (t_num, mut timer) in &mut timer_query {
+    for (num, mut move, mut timer) in player_query.iter_mut() {
         timer.0.tick(time.delta());
-        if timer.0.finished() {
-            if t_num == &PlayerNumber(1) {
-                p1_to_move.y -= 1.0;
-            } else if t_num == &PlayerNumber(2) {
-                p2_to_move.y -= 1.0;
-            }
-        } else {
-            if t_num == &PlayerNumber(1) {
-                p1_to_move.y += 1.0;
-            } else if t_num == &PlayerNumber(2) {
-                p2_to_move.y += 1.0;
-            }
+        let (input, _) = inputs[num.0];
+
+        let mut direction = Vec2::ZERO;
+
+        let (input, _) = inputs[0];
+        if input & INPUT_UP != 0 {
+            direction.y += 1.;
         }
-    }
 
-    if keyboard.pressed(KeyCode::A) {
-        p1_to_move.x -= 1.0;
-    }
-    if keyboard.pressed(KeyCode::D) {
-        p1_to_move.x += 1.0;
-    }
+        if timer.0.finished() {
+            direction.y -= 1.;
+        } else {
+            direction.y += 1.;
+        }
 
-    if keyboard.pressed(KeyCode::Left) {
-        p2_to_move.x -= 1.0;
+        if input & INPUT_RIGHT != 0 {
+            direction.x += 1.;
+        }
+        if input & INPUT_LEFT != 0 {
+            direction.x -= 1.;
+        }
+        if direction == Vec2::ZERO {
+            return;
+        }
+        info!("Direction: {}", direction);
     }
-    if keyboard.pressed(KeyCode::Right) {
-        p2_to_move.x += 1.0;
-    }
+    
+}
 
+/*
+fn update_physics(
+    mut commands: Commands,
+    mut timer_query: Query<(&PlayerNumber, &mut JumpTimer)>,
+    mut controllers: Query<(
+        &PlayerNumber,
+        &mut MovementData,
+        &mut KinematicCharacterController,
+    )>,
+    outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
+) {
     for (num, mut movement, mut controller) in controllers.iter_mut() {
         if num == &PlayerNumber(1) && m_move {
             let mut on_ground = false;
@@ -230,3 +255,4 @@ fn update_physics(
         }
     }
 }
+*/

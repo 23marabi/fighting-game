@@ -12,6 +12,8 @@ mod ui;
 use ui::UiPlugin;
 mod sound;
 use sound::SoundPlugin;
+mod network;
+use network::NetworkPlugin;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum AppState {
@@ -72,5 +74,6 @@ fn main() {
         .add_plugin(UiPlugin)
         .add_plugin(SoundPlugin)
         .add_plugin(ProtoPlugin::default())
+        .add_plugin(NetworkPlugin)
         .run();
 }
