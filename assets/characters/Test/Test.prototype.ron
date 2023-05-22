@@ -4,6 +4,11 @@
 		"fighting_game::game::player::Player": (
 			name: "Test",
 			health: 12.0,
+			moveset: ({
+				"Punch": [Hit],
+				"Super Punch": [Down, Left, Hit],
+			}),
+			jump_time: 0.32,
 			physics: (
 				velocity: (
 					x: 0.0, 

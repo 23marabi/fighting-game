@@ -1,5 +1,5 @@
 use crate::AppState;
-use bevy::{input::gamepad::GamepadEvent, prelude::*};
+use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 use crate::game::player::{MovementData, PlayerNumber};
@@ -17,7 +17,7 @@ impl Plugin for PhysicsPlugin {
 }
 
 #[derive(Component)]
-struct JumpTimer(Timer);
+pub struct JumpTimer(pub Timer);
 
 #[derive(Component)]
 struct Countdown(Timer);
@@ -27,16 +27,6 @@ struct Direction(Vec2);
 
 #[derive(Component)]
 struct Velocity(Vec2);
-
-fn gamepad_ordered_events(mut gamepad_events: EventReader<GamepadEvent>) {
-    for gamepad_event in gamepad_events.iter() {
-        match gamepad_event {
-            GamepadEvent::Connection(connection_event) => info!("{:?}", connection_event),
-            GamepadEvent::Button(button_event) => info!("{:?}", button_event),
-            GamepadEvent::Axis(axis_event) => info!("{:?}", axis_event),
-        }
-    }
-}
 
 fn setup_physics(mut commands: Commands, s: Res<Settings>) {
     /* Create the ground & ceiling */
@@ -82,15 +72,6 @@ fn setup_physics(mut commands: Commands, s: Res<Settings>) {
             s.physics.right_wall.position.1,
             0.0,
         )));
-    commands.spawn((
-        PlayerNumber(1),
-        JumpTimer(Timer::from_seconds(0.35, TimerMode::Once)),
-    ));
-
-    commands.spawn((
-        PlayerNumber(2),
-        JumpTimer(Timer::from_seconds(0.35, TimerMode::Once)),
-    ));
 
     commands.spawn(Countdown(Timer::from_seconds(0.5, TimerMode::Once)));
 }

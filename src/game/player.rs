@@ -1,10 +1,13 @@
 use crate::AppState;
-use bevy::prelude::*;
+use ahash::{AHasher, RandomState};
+use bevy::{prelude::*, utils::Duration};
 use bevy_proto::prelude::*;
 use bevy_rapier2d::prelude::*;
+use std::collections::HashMap;
 use std::fmt;
 
 use crate::game::character::CharacterMap;
+use crate::game::physics::JumpTimer;
 
 pub struct PlayerPlugin;
 
@@ -12,15 +15,14 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Player>()
             .register_type::<PlayerNumber>()
+            .register_type::<PlayerInput>()
             .register_type::<MovementData>()
+            .register_type::<Vec<PlayerInput>>()
+            .register_type::<HashMap<String, Vec<PlayerInput>, RandomState>>()
+            .register_type::<MoveSet>()
             .register_type::<bevy_proto::custom::TransformBundle>()
             .register_type::<Transform>()
             .add_system(add_players.in_schedule(OnEnter(AppState::InGame)));
-        // .add_system(
-        //     check_player_state
-        //         .in_set(OnUpdate(AppState::InGame))
-        //         .after(add_players),
-        // );
     }
 }
 
@@ -33,7 +35,12 @@ impl Schematic for Player {
             .unwrap()
             .insert(Name(input.name.clone()))
             .insert(Health(input.health))
+            .insert(MoveBuffer::default())
             .insert(KinematicCharacterController::default())
+            .insert(JumpTimer(Timer::from_seconds(
+                input.jump_time,
+                TimerMode::Once,
+            )))
             .insert(Collider::capsule(
                 Vec2::new(0.0, -input.collider),
                 Vec2::new(0.0, input.collider),
@@ -43,6 +50,7 @@ impl Schematic for Player {
             //     -464.002, -254.0, 0.0,
             // )))
             .insert(input.physics)
+            .insert(input.moveset.clone())
             .insert(PlayerState::Idle);
     }
 
@@ -56,6 +64,8 @@ impl Schematic for Player {
             .remove::<Collider>()
             .remove::<MovementData>()
             .remove::<PlayerNumber>()
+            .remove::<JumpTimer>()
+            .remove::<MoveSet>()
             .remove::<PlayerState>();
     }
 }
@@ -64,9 +74,26 @@ impl Schematic for Player {
 struct PlayerSetup {
     name: String,
     health: f64,
+    jump_time: f32,
     physics: MovementData,
+    moveset: MoveSet,
     collider: f32,
 }
+
+#[derive(Component, Reflect, FromReflect, Clone)]
+pub struct MoveSet(pub HashMap<String, Vec<PlayerInput>, RandomState>);
+
+#[derive(Component, Reflect, FromReflect, Debug, Copy, Clone, Eq, PartialEq)]
+pub enum PlayerInput {
+    Up,
+    Down,
+    Left,
+    Right,
+    Hit,
+}
+
+#[derive(Component, Debug, Default)]
+pub struct MoveBuffer(pub Vec<(PlayerInput, Duration)>);
 
 #[derive(Component, Reflect, Default, FromReflect, Schematic, Copy, Clone)]
 #[reflect(Schematic)]
