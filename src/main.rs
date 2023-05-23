@@ -43,7 +43,6 @@ fn main() {
     let args = Args::parse();
 
     let settings = Settings::new().unwrap();
-    println!("{:?}", settings);
 
     let primary_window = Window {
         title: "Fighting Game".to_string(),

@@ -1,6 +1,7 @@
 use crate::AppState;
 use ahash::AHashMap;
 use bevy::prelude::*;
+use bevy_debug_text_overlay::screen_print;
 use bevy_proto::prelude::*;
 use ignore::{types::TypesBuilder, WalkBuilder};
 use std::path::PathBuf;
@@ -78,10 +79,6 @@ impl CharacterMap {
                 }
                 Err(err) => error!("ERROR: {}", err),
             }
-        }
-
-        for (name, char) in &self.0 {
-            println!("{}: {:?}", name, char);
         }
     }
 }

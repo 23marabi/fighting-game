@@ -388,6 +388,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy-debug-text-overlay"
+version = "5.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3736a9eca883852373ce0d80b37c9df454a256095a9f79d139f32278785bb7b0"
+dependencies = [
+ "bevy",
+ "lazy_static",
+]
+
+[[package]]
 name = "bevy-discord-presence"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1988,6 +1998,7 @@ version = "0.1.0"
 dependencies = [
  "ahash 0.8.3",
  "bevy",
+ "bevy-debug-text-overlay",
  "bevy-discord-presence",
  "bevy-inspector-egui",
  "bevy_easings",
@@ -2004,6 +2015,7 @@ dependencies = [
  "ignore",
  "serde",
  "serde_derive",
+ "strum_macros",
 ]
 
 [[package]]

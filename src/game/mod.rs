@@ -1,7 +1,7 @@
 mod character;
 mod control;
 mod physics;
-mod player;
+pub mod player;
 mod sprite;
 
 use bevy::prelude::*;

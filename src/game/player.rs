@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::fmt;
 
 use crate::game::character::CharacterMap;
+use crate::game::control::AttackTimer;
 use crate::game::physics::JumpTimer;
 
 pub struct PlayerPlugin;
@@ -18,7 +19,8 @@ impl Plugin for PlayerPlugin {
             .register_type::<PlayerInput>()
             .register_type::<MovementData>()
             .register_type::<Vec<PlayerInput>>()
-            .register_type::<HashMap<String, Vec<PlayerInput>, RandomState>>()
+            .register_type::<HashMap<String, Combo, RandomState>>()
+            .register_type::<Combo>()
             .register_type::<MoveSet>()
             .register_type::<bevy_proto::custom::TransformBundle>()
             .register_type::<Transform>()
@@ -41,6 +43,7 @@ impl Schematic for Player {
                 input.jump_time,
                 TimerMode::Once,
             )))
+            .insert(AttackTimer(Timer::from_seconds(1.0, TimerMode::Once)))
             .insert(Collider::capsule(
                 Vec2::new(0.0, -input.collider),
                 Vec2::new(0.0, input.collider),
@@ -65,6 +68,7 @@ impl Schematic for Player {
             .remove::<MovementData>()
             .remove::<PlayerNumber>()
             .remove::<JumpTimer>()
+            .remove::<AttackTimer>()
             .remove::<MoveSet>()
             .remove::<PlayerState>();
     }
@@ -81,7 +85,13 @@ struct PlayerSetup {
 }
 
 #[derive(Component, Reflect, FromReflect, Clone)]
-pub struct MoveSet(pub HashMap<String, Vec<PlayerInput>, RandomState>);
+pub struct MoveSet(pub HashMap<String, Combo, RandomState>);
+
+#[derive(Component, Reflect, FromReflect, Clone)]
+pub struct Combo {
+    pub inputs: Vec<PlayerInput>,
+    pub time: f32,
+}
 
 #[derive(Component, Reflect, FromReflect, Debug, Copy, Clone, Eq, PartialEq)]
 pub enum PlayerInput {
@@ -89,7 +99,9 @@ pub enum PlayerInput {
     Down,
     Left,
     Right,
-    Hit,
+    Light,
+    Heavy,
+    Special,
 }
 
 #[derive(Component, Debug, Default)]

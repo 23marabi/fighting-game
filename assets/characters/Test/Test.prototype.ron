@@ -5,8 +5,14 @@
 			name: "Test",
 			health: 12.0,
 			moveset: ({
-				"Punch": [Hit],
-				"Super Punch": [Down, Left, Hit],
+				"Punch": (
+					inputs: [Light],
+					time: 1.0,
+				),
+				"Super Punch": (
+					inputs: [Down, Left, Heavy],
+					time: 5.0,
+				),
 			}),
 			jump_time: 0.32,
 			physics: (

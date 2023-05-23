@@ -1,6 +1,9 @@
+use crate::game::player::PlayerInput;
+use bevy::input::keyboard::KeyCode;
 use bevy::prelude::Resource;
 use config::{Config, ConfigError, Environment, File};
 use serde_derive::Deserialize;
+use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Resource)]
 #[allow(unused)]
