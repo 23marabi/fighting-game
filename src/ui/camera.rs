@@ -15,11 +15,11 @@ impl Plugin for CameraPlugin {
     }
 }
 
-fn setup_camera(mut commands: Commands) {
+fn setup_camera(mut commands: Commands, s: Res<Settings>) {
     let mut camera_bundle = Camera2dBundle::default();
     camera_bundle.projection.scaling_mode = ScalingMode::Fixed {
-        width: 1920.,
-        height: 1080.,
+        width: s.window.resolution.0,
+        height: s.window.resolution.1,
     };
     commands.spawn(camera_bundle);
 }
