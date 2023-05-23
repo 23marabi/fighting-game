@@ -9,7 +9,7 @@ release:
 	cp -r assets fighting-game/
 	cp config.ron fighting-game/
 	cp target/release/fighting-game fighting-game/
-	ouch compress fighting-game fighting-game.tar.gz
+	ouch compress fighting-game fighting-game.tar.bz
 	rm -rf fighting-game
 
 perf:
