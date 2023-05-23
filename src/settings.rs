@@ -36,12 +36,20 @@ pub struct PhysicsObject {
 }
 
 #[derive(Debug, Deserialize, Resource)]
+pub struct Translation {
+    pub title: String,
+    pub developers: String,
+    pub play: String,
+}
+
+#[derive(Debug, Deserialize, Resource)]
 #[allow(unused)]
 pub struct Settings {
     pub window: Window,
     pub framerate: f64,
     pub background: Background,
     pub physics: Physics,
+    pub translation: HashMap<String, Translation>,
 }
 
 impl Settings {

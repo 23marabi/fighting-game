@@ -1,29 +1,53 @@
+use crate::settings::Settings;
 use crate::AppState;
 use bevy::prelude::*;
 use bevy_splash_screen::{SplashAssetType, SplashItem, SplashPlugin, SplashScreen};
 use bevy_tweening::EaseFunction;
+use std::process::exit;
 use std::time::Duration;
 
 pub struct SplashscreenPlugin;
 
 impl Plugin for SplashscreenPlugin {
     fn build(&self, app: &mut App) {
+        let settings = Settings::new().unwrap();
+        let title = match settings.translation.get(&envmnt::get_or_panic("LANG")) {
+            Some(v) => v.title.clone(),
+            None => {
+                eprintln!(
+                    "No field matching {} in settings",
+                    envmnt::get_or_panic("LANG")
+                );
+                exit(1);
+            }
+        };
+        let devs = match settings.translation.get(&envmnt::get_or_panic("LANG")) {
+            Some(v) => v.developers.clone(),
+            None => {
+                eprintln!(
+                    "No field matching {} in settings",
+                    envmnt::get_or_panic("LANG")
+                );
+                exit(1);
+            }
+        };
+
         app.add_plugin(
             SplashPlugin::new(AppState::Splash, AppState::MainMenu)
                 .skipable()
-                .add_screen(title_splashscreen()),
+                .add_screen(title_splashscreen(title, devs)),
         );
     }
 }
 
-pub fn title_splashscreen() -> SplashScreen {
+pub fn title_splashscreen(title: String, devs: String) -> SplashScreen {
     SplashScreen {
         brands: vec![
             SplashItem {
                 asset: SplashAssetType::SingleText(
                     Text::from_sections([
                         TextSection::new(
-                            "Fighting Game\n",
+                            format!("{}\n", title),
                             TextStyle {
                                 font_size: 100.,
                                 color: Color::WHITE,
@@ -39,7 +63,7 @@ pub fn title_splashscreen() -> SplashScreen {
                             },
                         ),
                         TextSection::new(
-                            "Erin, tqbed, Alyx",
+                            devs,
                             TextStyle {
                                 font_size: 50.,
                                 color: Color::WHITE,

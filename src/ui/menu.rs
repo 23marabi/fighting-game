@@ -1,5 +1,7 @@
+use crate::settings::Settings;
 use crate::AppState;
 use bevy::prelude::*;
+use std::process::exit;
 
 pub struct MenuPlugin;
 
@@ -21,7 +23,18 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
-pub fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>, s: Res<Settings>) {
+    let play = match s.translation.get(&envmnt::get_or_panic("LANG")) {
+        Some(v) => v.play.clone(),
+        None => {
+            eprintln!(
+                "No field matching {} in settings",
+                envmnt::get_or_panic("LANG")
+            );
+            exit(1);
+        }
+    };
+
     let button_entity = commands
         .spawn(NodeBundle {
             style: Style {
@@ -49,7 +62,7 @@ pub fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                 })
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
-                        "Play",
+                        play,
                         TextStyle {
                             font: asset_server.load("fonts/Kenney Pixel Square.ttf"),
                             font_size: 40.0,

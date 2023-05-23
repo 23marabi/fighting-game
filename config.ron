@@ -26,4 +26,11 @@
 			dimensions: (20.0, 1080.0),
 		),
 	),
+	translation: {
+		"en_US.UTF-8": (
+			title: "Fighting Game",
+			developers: "Erin, tqbed, Alyx",
+			play: "Play",
+		),
+	},
 )

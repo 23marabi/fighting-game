@@ -1,7 +1,9 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use bevy::prelude::*;
 use bevy_proto::prelude::*;
 use clap::Parser;
 use config::Config;
+use envmnt::{ExpandOptions, ExpansionType};
 use human_panic::setup_panic;
 use std::collections::HashMap;
 use std::process::exit;
@@ -44,8 +46,22 @@ fn main() {
 
     let settings = Settings::new().unwrap();
 
+    if !envmnt::exists("LANG") {
+        envmnt::set("LANG", "en_US.UTF-8");
+    }
+    let title = match settings.translation.get(&envmnt::get_or_panic("LANG")) {
+        Some(v) => v.title.clone(),
+        None => {
+            eprintln!(
+                "No field matching {} in settings",
+                envmnt::get_or_panic("LANG")
+            );
+            exit(1);
+        }
+    };
+
     let primary_window = Window {
-        title: "Fighting Game".to_string(),
+        title: title,
         resolution: settings.window.resolution.into(),
         resizable: settings.window.resizable,
         ..Default::default()
