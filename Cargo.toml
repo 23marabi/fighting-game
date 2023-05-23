@@ -36,6 +36,7 @@ human-panic = "1.1.4"
 ahash = "0.8.3"
 bevy-debug-text-overlay = "5.1.0"
 strum_macros = "0.24.3"
+bevy_qoi = "0.1.0"
 
 [patch.crates-io]
 bevy_tweening = { git = "https://github.com/sibsibsib/bevy_tweening", branch = "mirrored_repeat_fix" }

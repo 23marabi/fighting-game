@@ -2,6 +2,7 @@ use crate::game::player::{MoveBuffer, MoveSet, MovementData, PlayerInput, Player
 use crate::AppState;
 use bevy::{input::gamepad::GamepadEvent, prelude::*, utils::Duration};
 use bevy_debug_text_overlay::screen_print;
+use std::str::FromStr;
 
 #[derive(Component)]
 pub struct AttackTimer(pub Timer);
@@ -113,6 +114,7 @@ fn attack(
                         .count();
                     if matching == combo.inputs.len() && timer.0.finished() {
                         // Can enter animation from here
+                        // Or maybe send an Event or something
                         screen_print!(push, sec: 2.0, "{} Combo Entered: {:?}", name, combo.inputs);
                         timer.0 = Timer::from_seconds(combo.time, TimerMode::Once);
                     }
