@@ -13,12 +13,27 @@ impl Plugin for AnimationPlugin {
         app.add_plugin(SpriteSheetLoaderPlugin)
             .add_system(load_spritesheets.in_schedule(OnEnter(AppState::InGame)))
             .add_system(animate_players.in_set(OnUpdate(AppState::InGame)))
+            .add_system(move_players.in_set(OnUpdate(AppState::InGame)))
             .add_system(flip_players.in_set(OnUpdate(AppState::InGame)));
     }
 }
 
 #[derive(Component, Deref, DerefMut)]
 struct AnimationTimer(Timer);
+
+fn move_players(
+    outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
+    mut query: Query<(&AnimationTimer, &PlayerNumber, &mut Transform)>,
+) {
+    for (t, num, mut trans) in &mut query {
+        for (player, output) in outputs.iter() {
+            if num == player {
+                trans.translation.x += output.effective_translation.x;
+                trans.translation.y += output.effective_translation.y;
+            }
+        }
+    }
+}
 
 fn animate_players(
     time: Res<Time>,
@@ -27,13 +42,9 @@ fn animate_players(
         &mut AnimationTimer,
         &mut TextureAtlasSprite,
         &Handle<TextureAtlas>,
-        &PlayerNumber,
-        &mut Transform,
     )>,
-    // mut sprites: Query<(&PlayerNumber, &mut Transform)>,
-    outputs: Query<(&PlayerNumber, &KinematicCharacterControllerOutput)>,
 ) {
-    for (mut timer, mut sprite, texture_atlas_handle, num, mut trans) in &mut query {
+    for (mut timer, mut sprite, texture_atlas_handle) in &mut query {
         timer.tick(time.delta());
         if timer.just_finished() {
             let texture_atlas = match texture_atlases.get(texture_atlas_handle) {
@@ -41,13 +52,6 @@ fn animate_players(
                 None => return,
             };
             sprite.index = (sprite.index + 1) % texture_atlas.textures.len();
-        }
-
-        for (player, output) in outputs.iter() {
-            if num == player {
-                trans.translation.x += output.effective_translation.x;
-                trans.translation.y += output.effective_translation.y;
-            }
         }
     }
 }
